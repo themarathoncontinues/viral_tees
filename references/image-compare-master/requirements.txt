@@ -1,2 +1,0 @@
-Pillow==2.1.0
-python-Levenshtein==0.10.2
