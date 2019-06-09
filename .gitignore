@@ -1,0 +1,13 @@
+.idea/
+.env
+__pycache__/
+venv/
+notebooks/mitch/images/
+notebooks/mitch/overlay/
+references/code/
+references/*.zip
+.DS_Store
+data/
+token.pickle
+*.swp
+
