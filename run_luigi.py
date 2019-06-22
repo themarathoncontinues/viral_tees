@@ -3,7 +3,7 @@ import pickle
 from datetime import datetime
 
 
-class QueryTwitterTrend(luigi.ExternalTask):
+class QueryTwitterTrend(luigi.Task):
 
     date = luigi.DateMinuteParameter(default=datetime.now())
     country_code = luigi.Parameter(default='usa')
@@ -27,35 +27,41 @@ class QueryTwitterTrend(luigi.ExternalTask):
 
         df_container = retrieve_trends(args_dict)
         f = self.output(loc=self.country_code).open('w')
+
         df_container[self.country_code].to_csv(f, sep=',', encoding='utf-8')
         f.close()
 
 
 class TrendsTaskWrapper(luigi.WrapperTask):
+    is_complete = luigi.Parameter(default=False)
 
     def requires(self):
         locations = [
                 'usa-nyc',
-                'usa-lax',
-                'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-lax',
+                # 'usa-chi',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         for loc in locations:
             yield QueryTwitterTrend(country_code=loc)
 
-    def run(self):
-        self.complete()
+        import ipdb; ipdb.set_trace()
+        is_complete = True
+
+    def complete(self):
+        return False
+
 
 class EmailTwitterTrends(luigi.ExternalTask):
 
