@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import os
 from pathlib import Path
+from PIL import ImageFont, ImageDraw, Image
 
 def resize_img(image):
     height, width = image.shape[:2]
@@ -74,6 +75,19 @@ def run(args_dict):
     x, y = get_coordinates(background, overlay)
 
     img = overlay_transparent(background, overlay, x, y)
+
+    # convert image to RGB so that PIL supports it
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    pil_img = Image.fromarray(img)
+    draw = ImageDraw.Draw(pil_img)
+
+    # using ttf font
+    font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 20)
+
+    draw.text((175, 140), 'Kanye Test', font=font)  
+
+    img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
     cv2.imwrite(args_dict['output'], img)
 
