@@ -33,7 +33,7 @@ class QueryTwitterTrend(luigi.Task):
 
 
 class TrendsTaskWrapper(luigi.WrapperTask):
-    is_complete = luigi.Parameter(default=False)
+    is_complete = False
 
     def requires(self):
         locations = [
@@ -56,12 +56,13 @@ class TrendsTaskWrapper(luigi.WrapperTask):
         for loc in locations:
             yield QueryTwitterTrend(country_code=loc)
 
-        import ipdb; ipdb.set_trace()
-        is_complete = True
+        self.is_complete = True
 
     def complete(self):
-        return False
-
+        if self.is_complete:
+            return True
+        else:
+            return False
 
 class EmailTwitterTrends(luigi.ExternalTask):
 
