@@ -3,6 +3,7 @@
 __pycache__/
 venv/
 env/
+logs/
 
 notebooks/mitch/images/
 notebooks/mitch/overlay/
