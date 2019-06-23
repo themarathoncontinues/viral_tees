@@ -103,7 +103,7 @@ class SaveImages(luigi.Task):
 
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
-    img_dict = ['x', 'y', 'z']
+    img_dict = ['', '', '']
 
     def requires(self):
         return [TrimTrendsData(date=self.date, loc=self.loc)]
@@ -181,33 +181,6 @@ class RunPipeline(luigi.WrapperTask):
         fout = LOG_DIR / fname
 
         return luigi.LocalTarget(fname)
-
-    # for loc in locations:
-    #     yield QueryTwitterTrend(location=loc)
-
-    # is_complete = False
-
-    # def requires(self):
-    #     return TrimTrendsTaskWrapper()
-
-    # def run(self):
-    #     trimmed_trends = self.requires()
-    #     trimmed_trends_paths = [
-    #         Path(fp.path) for fp in trimmed_trends.input()
-    #     ]
-
-    #     import ipdb; ipdb.set_trace()
-
-    #     for fp in trimmed_trends_paths:
-    #         yield SaveTrendImages(fp=fp)
-
-    #     self.is_complete = True
-
-    # def complete(self):
-    #     if self.is_complete:
-    #         return True
-    #     else:
-    #         return False
 
 
 if __name__ == '__main__':
