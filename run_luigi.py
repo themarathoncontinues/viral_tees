@@ -20,7 +20,8 @@ from utils.constants import \
     IMAGES_DIR, \
     SHIRTS_DIR, \
     SHIRT_BG, \
-    SHOPIFY_JSON
+    SHOPIFY_JSON, \
+    RESPONSE_JSON
 
 # LOG_FORMAT='%(asctime)s,%(msecs)d|%(name)s|%(levelname)s -',
 LOG_FILE='logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
@@ -249,12 +250,28 @@ class PostShopify(luigi.Task):
         return[GenerateData(date=self.date, loc=self.loc)]
 
     def output(self):
-        pass
+        fout = Path(self.requires()[0].output().path).stem
+        fout = RESPONSE_JSON / fout
+        os.makedirs(os.path.dirname(fout), exist_ok=True)
+        return luigi.LocalTarget(str(fout.absolute()))        
 
     def run(self):
         from utils.post_shopify import create_product
 
-        pass
+        dfp = self.requires()[0].output().path
+        with open(dfp) as f:
+            data = json.load(f)
+
+        input_dict = {
+            'title': data['title'],
+            'body_html': 'Volume: {}'.format(data['tweet_volume'])
+        }
+
+        response = create_product(input_dict)
+        r_dict = response.json()
+        f = open(self.output().path, 'w')
+        json.dump(r_dict, f, indent=4)
+        f.close()
 
 class RunPipeline(luigi.WrapperTask):
 
