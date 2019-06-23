@@ -18,7 +18,7 @@ from utils.constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_D
 class CleanData(ExternalProgramTask):
 
     def program_args(self):
-        return ['./clean_data.sh']
+        return ['./execs/clean_data.sh']
 
     def output(self):
         return luigi.LocalTarget('output')
