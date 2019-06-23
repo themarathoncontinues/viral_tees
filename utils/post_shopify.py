@@ -7,7 +7,7 @@ load_dotenv('.env')
 
 SHOPIFY_ENDPOINT = os.environ['SHOPIFY_API']
 
-def create_product():
+def create_product(input_dict):
 
 	"""
 	Example payload
@@ -60,12 +60,12 @@ def create_product():
 	             'vendor': 'viral tees gubr'}}
 	"""
 
-	payload = {
-		"product": {
-			"title": "product for testing",
-			"body_html": "product for testing body",
-		}
-	}
+	payload = {'product': input_dict}
+	# 	"product": {
+	# 		"title": "product for testing",
+	# 		"body_html": "product for testing body",
+	# 	}
+	# }
 
 	headers = {
 		"Accept": "application/json",
