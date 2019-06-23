@@ -144,7 +144,7 @@ class ImageOverlay(luigi.Task):
         return [SaveImages(date=self.date, loc=self.loc)]
 
     def output(self):
-        fname = '{}'.format(self.args_dict['image'])
+        fname = 'shirt_{}'.format(self.args_dict['image'].split('/')[-1])
         fout = SHIRTS_DIR / fname
 
         return luigi.LocalTarget(fout)
@@ -160,8 +160,6 @@ class ImageOverlay(luigi.Task):
         self.args_dict = args_dict
 
         img = image_overlay(args_dict)
-
-        self.output_img = img
 
         fname = self.output().path
         os.makedirs(os.path.dirname(fname), exist_ok=True)
@@ -184,18 +182,18 @@ class RunPipeline(luigi.WrapperTask):
         locations = [
                 'usa-nyc',
                 'usa-lax',
-                'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-chi',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]
