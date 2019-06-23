@@ -3,9 +3,21 @@ import pandas as pd
 import pickle
 
 from datetime import datetime
+from luigi.contrib.external_program import ExternalProgramTask
 from pathlib import Path
+from subprocess import Popen, PIPE
 
-from constants import TRENDS_DIR, TRIMMED_DIR
+from constants import DATA_DIR, TRENDS_DIR, TRIMMED_DIR
+
+####### UTILITY TASKS
+
+class CleanData(ExternalProgramTask):
+
+    def program_args(self):
+        return ['./clean_data.sh']
+
+    def output(self):
+        return luigi.LocalTarget('output')
 
 
 class QueryTwitterTrend(luigi.Task):
@@ -93,7 +105,6 @@ class TrimTrendsData(luigi.Task):
         f = self.output().open('w')
         trimmed_df.to_csv(f, sep=',', encoding='utf-8', index=False)
         f.close()
-
 
 
 class TrimTrendsTaskWrapper(luigi.WrapperTask):
