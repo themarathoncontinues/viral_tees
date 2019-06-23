@@ -1,4 +1,5 @@
 import luigi
+import os
 import pandas as pd
 import requests
 import pickle
@@ -8,7 +9,9 @@ from luigi.contrib.external_program import ExternalProgramTask
 from pathlib import Path
 from subprocess import Popen, PIPE
 
-from constants import DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR
+from constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR
+
+
 
 ####### UTILITY TASKS
 
@@ -21,13 +24,34 @@ class CleanData(ExternalProgramTask):
         return luigi.LocalTarget('output')
 
 
-class QueryTwitterTrend(luigi.Task):
+####### PIPELINE
 
-    date = luigi.DateMinuteParameter(default=datetime.now())
-    location = luigi.Parameter()
+class StartLogging(luigi.Task):
+
+    date = luigi.DateMinuteParameter()
+
+    def run(self):
+        log = self.output().open('w')
+        log.write('Starting viral tees log: {}'.format(self.date))
+        log.close()
 
     def output(self):
-        fname = 'trends_{}_{}.csv'.format(self.date.strftime('%m%d_%Y_%H%M'), self.location)
+        fname = 'vt_{}.log'.format(self.date)
+        fout = LOG_DIR / fname
+
+        return luigi.LocalTarget(fname)
+
+
+class QueryTwitter(luigi.Task):
+
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+
+    def requires(self):
+        return [StartLogging(date=self.date)]
+
+    def output(self):
+        fname = 'trends_{}_{}.csv'.format(self.date.strftime('%m%d_%Y_%H%M'), self.loc)
         fout = TRENDS_DIR / fname
 
         return luigi.LocalTarget(fout)
@@ -36,71 +60,38 @@ class QueryTwitterTrend(luigi.Task):
         from retrieve_trends import run as retrieve_trends
 
         args_dict = {
-            'location': [self.location]
+            'location': [self.loc]
         }
 
         df_container = retrieve_trends(args_dict)
         f = self.output().open('w')
-
-        df_container[self.location].to_csv(f, sep=',', encoding='utf-8', index=False)
+        df_container[self.loc].to_csv(f, sep=',', encoding='utf-8', index=False)
         f.close()
-
-
-class TrendsTaskWrapper(luigi.WrapperTask):
-
-    is_complete = False
-
-    def requires(self):
-        locations = [
-                'usa-nyc',
-                'usa-lax',
-                'usa-chi',
-                # 'usa-dal',
-                # 'usa-hou',
-                # 'usa-wdc',
-                # 'usa-mia',
-                # 'usa-phi',
-                # 'usa-atl',
-                # 'usa-bos',
-                # 'usa-phx',
-                # 'usa-sfo',
-                # 'usa-det',
-                # 'usa-sea',
-        ]
-
-        for loc in locations:
-            yield QueryTwitterTrend(location=loc)
-
-        self.is_complete = True
-
-    def complete(self):
-        if self.is_complete:
-            return True
-        else:
-            return False
 
 
 class TrimTrendsData(luigi.Task):
 
-    fp = luigi.Parameter()
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
 
     @staticmethod
     def trim_data(csv):
         df = pd.read_csv(csv, sep=',', engine='python')
-        df.sort_values(['tweet_volume'], ascending=False) 
+        df.sort_values(['tweet_volume'], ascending=False)
         return df.head(n=5)
 
     def requires(self):
-        return TrendsTaskWrapper()
+        return [QueryTwitter(date=self.date, loc=self.loc)]
 
     def output(self):
-        fname = '{}_{}.csv'.format('trimmed', Path(self.fp).stem)
+        fname = self.requires()[0].output().path.split('/')[-1]
+        fname = '{}_{}'.format('trimmed', fname)
         fout = TRIMMED_DIR / fname
 
         return luigi.LocalTarget(fout)
 
     def run(self):
-        fp = Path(self.fp)
+        fp = self.requires()[0].output().path
         trimmed_df = self.trim_data(fp)
 
         f = self.output().open('w')
@@ -108,86 +99,115 @@ class TrimTrendsData(luigi.Task):
         f.close()
 
 
-class TrimTrendsTaskWrapper(luigi.WrapperTask):
+class SaveImages(luigi.Task):
 
-    is_complete = False
-
-    def requires(self):
-        return TrendsTaskWrapper()
-
-    def run(self):
-        trends_data = self.requires()
-        trends_path = [Path(fp.path) for fp in trends_data.input()]
-
-        for fp in trends_path:
-            yield TrimTrendsData(fp=fp)
-
-        self.is_complete = True
-
-    def complete(self):
-        if self.is_complete:
-            import ipdb; ipdb.set_trace()
-            return True
-        else:
-            return False
-
-
-class SaveTrendImages(luigi.Task):
-
-    fp = luigi.Parameter()
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+    img_dict = ['x', 'y', 'z']
 
     def requires(self):
-        return TrimTrendsTaskWrapper()
+        return [TrimTrendsData(date=self.date, loc=self.loc)]
 
     def output(self):
-        name = Path(fp).stem.replace('trimmed', 'img')
-        fname = '{}_{}.jpg'.format(name, self.img_dict.keys[0])
+        # fname = self.requires()[0].output().path.split('/')[-1].replace('.csv', '.jpg')
+        fname = '{}_{}.jpg'.format(self.img_dict[0], self.img_dict[1])
         fout = IMAGES_DIR / fname
 
         return luigi.LocalTarget(fout)
 
     def run(self):
-        import ipdb; ipdb.set_trace()
-
         from get_images import run as get_images
 
         args_dict = {
-            'input': Path(self.fp),
-            'output': Path(self.fp).stem
+            'input': self.requires()[0].output().path,
+            'output': self.output().path
         }
 
         self.img_dict = get_images(args_dict)
+        response = requests.get(self.img_dict[2]).content
 
-        with open(self.output(), 'wb') as img:
-            response = requests.get(self.img_dict['url']).content
-            img.write(response)
+        fname = self.output().path
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
+        f = open(fname, 'wb')
+        f.write(response)
+        f.close()
 
 
-class SaveImagesTaskWrapper(luigi.WrapperTask):
+class RunPipeline(luigi.WrapperTask):
 
-    is_complete = False
+    date = datetime.now()
+    date = luigi.DateMinuteParameter(default=date)
 
     def requires(self):
-        return TrimTrendsTaskWrapper()
 
-    def run(self):
-        trimmed_trends = self.requires()
-        trimmed_trends_paths = [
-            Path(fp.path) for fp in trimmed_trends.input()
+        base_tasks = [StartLogging(date=self.date)]
+
+        ####### CONFIG
+
+        locations = [
+                'usa-nyc',
+                'usa-lax',
+                'usa-chi',
+                'usa-dal',
+                'usa-hou',
+                'usa-wdc',
+                'usa-mia',
+                'usa-phi',
+                'usa-atl',
+                'usa-bos',
+                'usa-phx',
+                'usa-sfo',
+                'usa-det',
+                'usa-sea',
         ]
 
-        import ipdb; ipdb.set_trace()
+        twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]
+        munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
+        image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
 
-        for fp in trimmed_trends_paths:
-            yield SaveTrendImages(fp=fp)
+        tasks = base_tasks + image_tasks
 
-        self.is_complete = True
+        return tasks
 
-    def complete(self):
-        if self.is_complete:
-            return True
-        else:
-            return False
+    def run(self):
+        
+        log = self.output().open('w')
+        log.write('Ending viral tees log: {}'.format(self.date))
+        log.close()
+
+    def output(self):
+
+        fname = 'final_vt_{}.log'.format(self.date)
+        fout = LOG_DIR / fname
+
+        return luigi.LocalTarget(fname)
+
+    # for loc in locations:
+    #     yield QueryTwitterTrend(location=loc)
+
+    # is_complete = False
+
+    # def requires(self):
+    #     return TrimTrendsTaskWrapper()
+
+    # def run(self):
+    #     trimmed_trends = self.requires()
+    #     trimmed_trends_paths = [
+    #         Path(fp.path) for fp in trimmed_trends.input()
+    #     ]
+
+    #     import ipdb; ipdb.set_trace()
+
+    #     for fp in trimmed_trends_paths:
+    #         yield SaveTrendImages(fp=fp)
+
+    #     self.is_complete = True
+
+    # def complete(self):
+    #     if self.is_complete:
+    #         return True
+    #     else:
+    #         return False
 
 
 if __name__ == '__main__':

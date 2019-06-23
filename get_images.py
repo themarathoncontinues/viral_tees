@@ -1,18 +1,17 @@
+import json
+import logging
+import os
 import pandas as pd
+import requests
+import tweepy
+
 from dotenv import load_dotenv
 from pathlib import Path
-import requests
-import os
-import tweepy
-import json
-
-import logging
 
 logging.getLogger(__name__)
 
 env_path = Path('.') / '.env'
 load_dotenv(dotenv_path=env_path)
-
 
 TWITTER_API_KEY = os.getenv('TWITTER_API_KEY')
 TWITTER_API_SECRET = os.getenv('TWITTER_API_SECRET')
@@ -44,32 +43,30 @@ def tweepy_parser(filepath):
     amount_of_tweets_obtained = len(tweets_with_images)
     logging.info('Using {} tweets to select images'.format(amount_of_tweets_obtained))
 
-    find_target_tweets(trend_one, tweets_with_images)
+    return trend_one, tweets_with_images
 
 
 def find_target_tweets(trend_one, tweets_with_images):
 
-    urls = {}
-    for tweet in tweets_with_images:
-        id_num = tweet['id']
-        image_url = tweet['entities']['media'][0]['media_url']
-        urls[id_num] = {
-            'url': image_url
-        }
+    url = {}
+    tweet = tweets_with_images[0]
+    id_num = tweet['id']
+    image_url = tweet['entities']['media'][0]['media_url']
+
+    logging.info('Images returned to Luigi')
+
+    return trend_one[0], str(id_num), image_url
 
         # with open('data/images/{}_{}.jpg'.format(trend_one, id_num), 'wb') as handle:
         #     response = requests.get(image_url).content
         #     handle.write(response)
-    return urls
-
-    logging.info('Images saved to data/images dictionary')
-
 
 def run(args_dict):
 
-    img_meta = tweet_parser(args_dict['input'])
+    top_trend, img_lst = tweepy_parser(args_dict['input'])
+    urls = find_target_tweets(top_trend, img_lst)
 
-    return img_meta
+    return urls
 
 
 if __name__ == '__main__':
