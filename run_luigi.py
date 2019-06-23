@@ -1,5 +1,6 @@
 import cv2
 import json
+import logging as vt_logging
 import luigi
 import os
 import pandas as pd
@@ -21,13 +22,19 @@ from utils.constants import \
     SHIRT_BG, \
     SHOPIFY_JSON
 
-
+# LOG_FORMAT='%(asctime)s,%(msecs)d|%(name)s|%(levelname)s -',
+LOG_FILE='logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
+vt_logging.basicConfig(
+    level=vt_logging.INFO,
+    filename=LOG_FILE
+)
 
 ####### UTILITY TASKS
 
 class DeepClean(ExternalProgramTask):
 
     def program_args(self):
+        vt_logging.warning('Cleaned data drive.')
         return ['./execs/clean_data.sh']
 
     def output(self):
@@ -44,12 +51,14 @@ class StartLogging(luigi.Task):
         log = self.output().open('w')
         log.write('Starting viral tees log: {}'.format(self.date))
         log.close()
+        vt_logging.info('Starting internal logger.')
+
 
     def output(self):
-        fname = 'vt_{}.log'.format(self.date)
+        fname = 'vt_{}.log'.format(self.date).replace(' ', '_')
         fout = LOG_DIR / fname
-
-        return luigi.LocalTarget(fname)
+        os.makedirs(os.path.dirname(fout), exist_ok=True)
+        return luigi.LocalTarget(fout)
 
 
 class QueryTwitter(luigi.Task):
@@ -77,6 +86,8 @@ class QueryTwitter(luigi.Task):
         f = self.output().open('w')
         df_container[self.loc].to_csv(f, sep=',', encoding='utf-8', index=False)
         f.close()
+        vt_logging.info('Querying Twitter trends.')
+
 
 
 class TrimTrendsData(luigi.Task):
@@ -107,6 +118,8 @@ class TrimTrendsData(luigi.Task):
         f = self.output().open('w')
         trimmed_df.to_csv(f, sep=',', encoding='utf-8', index=False)
         f.close()
+        vt_logging.info('Munging Twitter trends.')
+
 
 
 class SaveImages(luigi.Task):
@@ -141,6 +154,7 @@ class SaveImages(luigi.Task):
         f = open(fname, 'wb')
         f.write(response)
         f.close()
+        vt_logging.info('Saving Twitter trends images.')
 
 
 class ImageOverlay(luigi.Task):
@@ -175,6 +189,7 @@ class ImageOverlay(luigi.Task):
         f = open(fname, 'wb')
         cv2.imwrite(f.name, img)
         f.close()
+        vt_logging.info('T-Shirt generated.')
 
 
 class GenerateData(luigi.Task):
@@ -212,6 +227,8 @@ class GenerateData(luigi.Task):
         f = open(self.output().path, 'w')
         json.dump(meta_dict, f, indent=4)
         f.close()
+        vt_logging.info('JSON data generated.')
+
 
     def output(self):
         og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
@@ -237,8 +254,7 @@ class PostShopify(luigi.Task):
     def run(self):
         from utils.post_shopify import create_product
 
-        import ipdb; ipdb.set_trace()
-
+        pass
 
 class RunPipeline(luigi.WrapperTask):
 
@@ -286,13 +302,11 @@ class RunPipeline(luigi.WrapperTask):
         return tasks
 
     def run(self):
-        
         log = self.output().open('w')
         log.write('Ending viral tees log: {}'.format(self.date))
         log.close()
 
     def output(self):
-
         fname = 'final_vt_{}.log'.format(self.date)
         fout = LOG_DIR / fname
 
