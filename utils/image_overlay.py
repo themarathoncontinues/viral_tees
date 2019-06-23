@@ -1,5 +1,6 @@
 import argparse
 import cv2
+import datetime
 import numpy as np
 import os
 from pathlib import Path
@@ -66,14 +67,19 @@ def crop_image(y, x, image):
     return image[y:y + h, x:x + w]
 
 
-def add_text(img):
+def add_text(img, trend_name):
+    today = str(datetime.datetime.today().strftime('%m-%d-%Y'))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     pil_img = Image.fromarray(img)
     draw = ImageDraw.Draw(pil_img)
 
-    font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 20)
-    draw.text((245, 140), 'Kanye Test', font=font)
+    font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 15)
+    draw.text((250, 150),
+              '{} trending on {}'.format(trend_name, today),
+              font=font,
+              fill=(153, 153, 153, 1))
+
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
     return img
@@ -93,7 +99,7 @@ def run(args_dict):
 
     filename = args_dict['image']
     trend_name = (filename.split('/')[-1]).split('_', 1)[0]
-    img = add_text(img)
+    img = add_text(img, trend_name)
 
     return img
 

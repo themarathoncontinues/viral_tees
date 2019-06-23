@@ -168,28 +168,28 @@ class ImageOverlay(luigi.Task):
         f.close()
 
 
-class GenerateData(luigi.Task):
-
-    date = luigi.DateMinuteParameter()
-    loc = luigi.Parameter()
-
-    def requires
-
-class PostShopify(luigi.Task):
-
-    date = luigi.DateMinuteParameter()
-    loc = luigi.Parameter()
-
-    def requires(self):
-        return[ImageOverlay(date=self.date, loc=self.loc)]
-
-    def output(self):
-        pass
-
-    def run(self):
-        from utils.post_shopify import create_product
-
-        import ipdb; ipdb.set_trace()
+# class GenerateData(luigi.Task):
+#
+#     date = luigi.DateMinuteParameter()
+#     loc = luigi.Parameter()
+#
+#     def requires
+#
+# class PostShopify(luigi.Task):
+#
+#     date = luigi.DateMinuteParameter()
+#     loc = luigi.Parameter()
+#
+#     def requires(self):
+#         return[ImageOverlay(date=self.date, loc=self.loc)]
+#
+#     def output(self):
+#         pass
+#
+#     def run(self):
+#         from utils.post_shopify import create_product
+#
+#         import ipdb; ipdb.set_trace()
 
 
 
@@ -225,14 +225,14 @@ class RunPipeline(luigi.WrapperTask):
         munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
         image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
         image_overlay = [ImageOverlay(date=self.date, loc=loc) for loc in locations]
-        shopify_tasks = [PostShopify(date=self.date, loc=loc) for loc in locations]
+        # shopify_tasks = [PostShopify(date=self.date, loc=loc) for loc in locations]
 
         tasks = base_tasks + \
             twitter_tasks + \
             munging_tasks + \
             image_tasks + \
-            image_overlay + \
-            shopify_tasks
+            image_overlay
+            # shopify_tasks
 
         return tasks
 
