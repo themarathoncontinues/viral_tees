@@ -190,6 +190,5 @@ class SaveImagesTaskWrapper(luigi.WrapperTask):
             return False
 
 
-
 if __name__ == '__main__':
     luigi.run()
