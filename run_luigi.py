@@ -1,3 +1,4 @@
+import cv2
 import luigi
 import os
 import pandas as pd
@@ -9,7 +10,7 @@ from luigi.contrib.external_program import ExternalProgramTask
 from pathlib import Path
 from subprocess import Popen, PIPE
 
-from utils.constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR
+from utils.constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR, SHIRTS_DIR, SHIRT_BG
 
 
 
@@ -18,7 +19,7 @@ from utils.constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_D
 class CleanData(ExternalProgramTask):
 
     def program_args(self):
-        return ['./clean_data.sh']
+        return ['./execs/clean_data.sh']
 
     def output(self):
         return luigi.LocalTarget('output')
@@ -133,6 +134,42 @@ class SaveImages(luigi.Task):
         f.close()
 
 
+class ImageOverlay(luigi.Task):
+
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+    args_dict = {'image': '', 'background': '', 'output': ''}
+
+    def requires(self):
+        return [SaveImages(date=self.date, loc=self.loc)]
+
+    def output(self):
+        fname = '{}'.format(self.args_dict['image'])
+        fout = SHIRTS_DIR / fname
+
+        return luigi.LocalTarget(fout)
+
+    def run(self):
+        from utils.image_overlay import run as image_overlay
+
+        args_dict = {
+            'image': self.requires()[0].output().path,
+            'background': str(SHIRT_BG.absolute()),
+            'output': self.output().path
+        }
+        self.args_dict = args_dict
+
+        img = image_overlay(args_dict)
+
+        self.output_img = img
+
+        fname = self.output().path
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
+        f = open(fname, 'wb')
+        cv2.imwrite(f.name, img)
+        f.close()
+
+
 class RunPipeline(luigi.WrapperTask):
 
     date = datetime.now()
@@ -164,8 +201,9 @@ class RunPipeline(luigi.WrapperTask):
         twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]
         munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
         image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
+        image_overlay = [ImageOverlay(date=self.date, loc=loc) for loc in locations]
 
-        tasks = base_tasks + image_tasks
+        tasks = base_tasks + image_overlay
 
         return tasks
 

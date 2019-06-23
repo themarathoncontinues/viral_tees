@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from PIL import ImageFont, ImageDraw, Image
 
+
 def resize_img(image):
     height, width = image.shape[:2]
     max_height = 100000
@@ -20,6 +21,7 @@ def resize_img(image):
         image = cv2.resize(image, None, fx=scaling_factor, fy=scaling_factor, interpolation=cv2.INTER_AREA)
 
     return image
+
 
 def overlay_transparent(background, overlay, x, y):
     background_width, background_height = background.shape[:2]
@@ -74,7 +76,9 @@ def add_text(img):
     draw.text((245, 140), 'Kanye Test', font=font)
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
-    cv2.imwrite(args_dict['output'], img)
+    # cv2.imwrite(args_dict['output'], img)
+
+    return img
 
 
 def run(args_dict):
@@ -89,22 +93,9 @@ def run(args_dict):
 
     img = overlay_transparent(background, overlay, x, y)
 
-    add_text(img)
+    img = add_text(img)
 
-    # # convert image to RGB so that PIL supports it
-    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    #
-    # pil_img = Image.fromarray(img)
-    # draw = ImageDraw.Draw(pil_img)
-    #
-    # # using ttf font
-    # font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 20)
-    #
-    # draw.text((175, 140), 'Kanye Test', font=font)
-    #
-    # img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-    #
-    # cv2.imwrite(args_dict['output'], img)
+    return img
 
 
 if __name__ == '__main__':
