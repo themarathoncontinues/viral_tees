@@ -14,6 +14,7 @@ from pathlib import Path
 from subprocess import Popen, PIPE
 
 from utils.constants import \
+    SRC_DIR, \
     LOG_DIR, \
     DATA_DIR, \
     TRENDS_DIR, \
@@ -25,7 +26,7 @@ from utils.constants import \
     RESPONSE_JSON
 
 # LOG_FORMAT='%(asctime)s,%(msecs)d|%(name)s|%(levelname)s -',
-LOG_FILE='logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
+LOG_FILE='/home/git/viral_tees/logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
 vt_logging.basicConfig(
     level=vt_logging.INFO,
     filename=LOG_FILE
@@ -37,7 +38,7 @@ class DeepClean(ExternalProgramTask):
 
     def program_args(self):
         vt_logging.warning('Cleaned data drive.')
-        return ['./execs/clean_data.sh']
+        return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
 
     def output(self):
         return luigi.LocalTarget('output')
@@ -204,8 +205,8 @@ class GenerateData(luigi.Task):
 
     def run(self):
         image_fp = self.requires()[0].output().path
-        title = self.requires()[0].output().path.split('/')[2].split('_')[1]
-
+        title = image_fp.split('/')[-1].split('_')[1]
+        
         og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
         df = pd.read_csv(og_d)
         df = df[df['name'] == title]
@@ -278,8 +279,6 @@ class PostShopify(luigi.Task):
 
         img_response = post_image(img_dict, response)
 
-        import ipdb; ipdb.set_trace()
-
         r_dict = response.json()
         f = open(self.output().path, 'w')
         json.dump(r_dict, f, indent=4)
@@ -299,18 +298,18 @@ class RunPipeline(luigi.WrapperTask):
         locations = [
                 'usa-nyc',
                 'usa-lax',
-                # 'usa-chi',
-                # 'usa-dal',
-                # 'usa-hou',
-                # 'usa-wdc',
-                # 'usa-mia',
-                # 'usa-phi',
-                # 'usa-atl',
-                # 'usa-bos',
-                # 'usa-phx',
-                # 'usa-sfo',
-                # 'usa-det',
-                # 'usa-sea',
+                'usa-chi',
+                'usa-dal',
+                'usa-hou',
+                'usa-wdc',
+                'usa-mia',
+                'usa-phi',
+                'usa-atl',
+                'usa-bos',
+                'usa-phx',
+                'usa-sfo',
+                'usa-det',
+                'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]

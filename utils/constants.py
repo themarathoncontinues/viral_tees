@@ -1,6 +1,6 @@
 from pathlib import Path
 
-SRC_DIR = Path('.')
+SRC_DIR = Path('/home/git/viral_tees')
 
 DATA_DIR = SRC_DIR / 'data'
 TRENDS_DIR = DATA_DIR / 'trends'

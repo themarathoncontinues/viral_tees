@@ -3,6 +3,7 @@ import cv2
 import datetime
 import numpy as np
 import os
+from .constants import SRC_DIR
 from pathlib import Path
 from PIL import ImageFont, ImageDraw, Image
 
@@ -74,7 +75,7 @@ def add_text(img, trend_name):
     pil_img = Image.fromarray(img)
     draw = ImageDraw.Draw(pil_img)
 
-    font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 15)
+    font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(str(SRC_DIR)), 15)
     draw.text((250, 150),
               '{} trending on {}'.format(trend_name, today),
               font=font,
@@ -86,7 +87,7 @@ def add_text(img, trend_name):
 
 
 def run(args_dict):
-    background = cv2.imread(args_dict['background']) # 480 by 492
+    background = cv2.imread(args_dict['background'])
     overlay = cv2.imread(args_dict['image'])
     overlay = resize_img(overlay)
 
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--image', required=True,
         help='Path to overlay image on background t-shirt.')
     parser.add_argument('-b', '--background', required=False,
-        default='{}/static/background.jpg'.format(os.getcwd()),
+        default='/home/git/viral_tees/static/background.jpg',
         help='Path to overlay image on t-shirt.')
     parser.add_argument('-o', '--output', required=True,
         help='Path to image output.')
