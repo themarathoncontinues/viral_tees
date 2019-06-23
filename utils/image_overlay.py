@@ -45,7 +45,7 @@ def overlay_transparent(background, overlay, x, y):
                 overlay,
                 np.ones((overlay.shape[0], overlay.shape[1], 1), dtype = overlay.dtype) * 255
             ],
-            axis = 2,
+            axis=2,
         )
 
     overlay_image = overlay[..., :3]
@@ -76,8 +76,6 @@ def add_text(img):
     draw.text((245, 140), 'Kanye Test', font=font)
     img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
 
-    # cv2.imwrite(args_dict['output'], img)
-
     return img
 
 
@@ -93,6 +91,8 @@ def run(args_dict):
 
     img = overlay_transparent(background, overlay, x, y)
 
+    filename = args_dict['image']
+    trend_name = (filename.split('/')[-1]).split('_', 1)[0]
     img = add_text(img)
 
     return img
