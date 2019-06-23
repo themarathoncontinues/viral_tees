@@ -1,4 +1,5 @@
 import cv2
+import json
 import luigi
 import os
 import pandas as pd
@@ -10,7 +11,15 @@ from luigi.contrib.external_program import ExternalProgramTask
 from pathlib import Path
 from subprocess import Popen, PIPE
 
-from utils.constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR, SHIRTS_DIR, SHIRT_BG
+from utils.constants import \
+    LOG_DIR, \
+    DATA_DIR, \
+    TRENDS_DIR, \
+    TRIMMED_DIR, \
+    IMAGES_DIR, \
+    SHIRTS_DIR, \
+    SHIRT_BG, \
+    SHOPIFY_JSON
 
 
 
@@ -168,29 +177,58 @@ class ImageOverlay(luigi.Task):
         f.close()
 
 
-# class GenerateData(luigi.Task):
-#
-#     date = luigi.DateMinuteParameter()
-#     loc = luigi.Parameter()
-#
-#     def requires
-#
-# class PostShopify(luigi.Task):
-#
-#     date = luigi.DateMinuteParameter()
-#     loc = luigi.Parameter()
-#
-#     def requires(self):
-#         return[ImageOverlay(date=self.date, loc=self.loc)]
-#
-#     def output(self):
-#         pass
-#
-#     def run(self):
-#         from utils.post_shopify import create_product
-#
-#         import ipdb; ipdb.set_trace()
+class GenerateData(luigi.Task):
 
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+
+    def requires(self):
+        return [ImageOverlay(date=self.date, loc=self.loc)]
+
+    def run(self):
+        image_fp = self.requires()[0].output().path
+        title = self.requires()[0].output().path.split('/')[2].split('_')[1]
+
+        og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
+        df = pd.read_csv(og_d)
+        df = df[df['name'] == title]
+
+        tweet_volume = df['tweet_volume'][0]
+        tweet_url = df['url'][0]
+
+        opath = og_d.split('/')[-1].replace('csv', 'json')
+        out = SHOPIFY_JSON / opath
+
+        self.meta_dict = {
+            'og': og_d,
+            'tweet_volume': tweet_volume,
+            'tweet_url': tweet_url,
+            'img': image_fp,
+            'title': title,
+            'load': out
+        }
+
+        json = json.dumps(self.meta_dict, indent=4)
+        f = open(str(out.absolute()), 'w')
+        f.write(json)
+        f.close()
+
+
+class PostShopify(luigi.Task):
+
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+
+    def requires(self):
+        return[GenerateData(date=self.date, loc=self.loc)]
+
+    def output(self):
+        pass
+
+    def run(self):
+        from utils.post_shopify import create_product
+
+        import ipdb; ipdb.set_trace()
 
 
 class RunPipeline(luigi.WrapperTask):
@@ -225,14 +263,16 @@ class RunPipeline(luigi.WrapperTask):
         munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
         image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
         image_overlay = [ImageOverlay(date=self.date, loc=loc) for loc in locations]
-        # shopify_tasks = [PostShopify(date=self.date, loc=loc) for loc in locations]
+        generate_data = [GenerateData(date=self.date, loc=loc) for loc in locations]
+        shopify_tasks = [PostShopify(date=self.date, loc=loc) for loc in locations]
 
         tasks = base_tasks + \
             twitter_tasks + \
             munging_tasks + \
             image_tasks + \
-            image_overlay
-            # shopify_tasks
+            image_overlay + \
+            generate_data + \
+            shopify_tasks
 
         return tasks
 
