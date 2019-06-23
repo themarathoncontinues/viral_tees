@@ -8,6 +8,7 @@ import requests
 import pickle
 
 from datetime import datetime
+from json import JSONEncoder
 from luigi.contrib.external_program import ExternalProgramTask
 from pathlib import Path
 from subprocess import Popen, PIPE
@@ -250,13 +251,15 @@ class PostShopify(luigi.Task):
         return[GenerateData(date=self.date, loc=self.loc)]
 
     def output(self):
-        fout = Path(self.requires()[0].output().path).stem
+        fout = '{}.json'.format(
+            Path(self.requires()[0].output().path).stem
+        )
         fout = RESPONSE_JSON / fout
         os.makedirs(os.path.dirname(fout), exist_ok=True)
         return luigi.LocalTarget(str(fout.absolute()))        
 
     def run(self):
-        from utils.post_shopify import create_product
+        from utils.post_shopify import create_product, post_image
 
         dfp = self.requires()[0].output().path
         with open(dfp) as f:
@@ -264,10 +267,19 @@ class PostShopify(luigi.Task):
 
         input_dict = {
             'title': data['title'],
-            'body_html': 'Volume: {}'.format(data['tweet_volume'])
+            'body_html': 'Volume: {}'.format(data['tweet_volume']),
         }
 
         response = create_product(input_dict)
+
+        img_dict = {
+            'img': data['img']
+        }
+
+        img_response = post_image(img_dict, response)
+
+        import ipdb; ipdb.set_trace()
+
         r_dict = response.json()
         f = open(self.output().path, 'w')
         json.dump(r_dict, f, indent=4)
@@ -287,18 +299,18 @@ class RunPipeline(luigi.WrapperTask):
         locations = [
                 'usa-nyc',
                 'usa-lax',
-                'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-chi',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]
