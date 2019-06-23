@@ -64,6 +64,19 @@ def crop_image(y, x, image):
     return image[y:y + h, x:x + w]
 
 
+def add_text(img):
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    pil_img = Image.fromarray(img)
+    draw = ImageDraw.Draw(pil_img)
+
+    font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 20)
+    draw.text((245, 140), 'Kanye Test', font=font)
+    img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+
+    cv2.imwrite(args_dict['output'], img)
+
+
 def run(args_dict):
     background = cv2.imread(args_dict['background']) # 480 by 492
     overlay = cv2.imread(args_dict['image'])
@@ -76,20 +89,22 @@ def run(args_dict):
 
     img = overlay_transparent(background, overlay, x, y)
 
-    # convert image to RGB so that PIL supports it
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    add_text(img)
 
-    pil_img = Image.fromarray(img)
-    draw = ImageDraw.Draw(pil_img)
-
-    # using ttf font
-    font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 20)
-
-    draw.text((175, 140), 'Kanye Test', font=font)  
-
-    img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-
-    cv2.imwrite(args_dict['output'], img)
+    # # convert image to RGB so that PIL supports it
+    # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #
+    # pil_img = Image.fromarray(img)
+    # draw = ImageDraw.Draw(pil_img)
+    #
+    # # using ttf font
+    # font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(os.getcwd()), 20)
+    #
+    # draw.text((175, 140), 'Kanye Test', font=font)
+    #
+    # img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+    #
+    # cv2.imwrite(args_dict['output'], img)
 
 
 if __name__ == '__main__':
