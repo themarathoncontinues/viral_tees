@@ -53,6 +53,8 @@ Saves images from filtered trends data.
 
 Runs entire pipeline.
 
+![Screen Shot](https://i.imgur.com/qSORVn4.png "Pipeline")
+
 
 ### References
 

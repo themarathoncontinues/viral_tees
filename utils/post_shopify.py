@@ -1,3 +1,4 @@
+import base64
 import os
 import requests
 
@@ -24,3 +25,30 @@ def create_product(input_dict):
 
 	return response
 
+def post_image(image_dict, response):
+
+	product_id = response.json()['product']['id']
+
+	headers = {
+		"Accept": "application/json",
+		"Content-Type": "application/json"
+	}
+
+	with open(image_dict['img'], "rb") as f:
+		b64_fp = base64.encodestring(f.read()).decode('ascii')
+
+	payload = {
+		"image": {
+			"position": 1,
+			"attachment": b64_fp,
+			"filename": image_dict['img']
+		}
+	}
+
+	response = requests.post(
+		"{}/products/{}/images.json".format(SHOPIFY_ENDPOINT, product_id),
+		json=payload,
+		headers=headers
+	)
+
+	return response
