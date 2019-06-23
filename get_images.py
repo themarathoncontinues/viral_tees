@@ -48,16 +48,38 @@ def tweepy_parser(filepath):
 
 
 def find_target_tweets(trend_one, tweets_with_images):
+
+    urls = {}
     for tweet in tweets_with_images:
         id_num = tweet['id']
         image_url = tweet['entities']['media'][0]['media_url']
-        with open('data/images/{}_{}.jpg'.format(trend_one, id_num), 'wb') as handle:
-            response = requests.get(image_url).content
-            handle.write(response)
+        urls[id_num] = {
+            'url': image_url
+        }
 
-    logging.info('Images saved to data/images directory')
+        # with open('data/images/{}_{}.jpg'.format(trend_one, id_num), 'wb') as handle:
+        #     response = requests.get(image_url).content
+        #     handle.write(response)
+    return urls
+
+    logging.info('Images saved to data/images dictionary')
 
 
-if __name__ == "__main__":
-    filepath = 'data/trends/trends_0622_2019_1717_usa-nyc.csv'
-    tweepy_parser(filepath)
+def run(args_dict):
+
+    img_meta = tweet_parser(args_dict['input'])
+
+    return img_meta
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Retrieve images from trimmed trends CSV.')
+    parser.add_argument('-i', '--input', required=True,
+        help='Input path to CSV')
+    parser.add_argument('-o', '--output', required=True,
+        help='Path to image output.')
+
+    args_dict = vars(parser.parse_args())
+
+    run(args_dict)

@@ -1,11 +1,12 @@
 import luigi
 import pandas as pd
+import requests
 import pickle
 
 from datetime import datetime
 from pathlib import Path
 
-from constants import TRENDS_DIR, TRIMMED_DIR
+from constants import TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR
 
 
 class QueryTwitterTrend(luigi.Task):
@@ -42,17 +43,17 @@ class TrendsTaskWrapper(luigi.WrapperTask):
                 'usa-nyc',
                 'usa-lax',
                 'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         for loc in locations:
@@ -114,9 +115,69 @@ class TrimTrendsTaskWrapper(luigi.WrapperTask):
 
     def complete(self):
         if self.is_complete:
+            import ipdb; ipdb.set_trace()
             return True
         else:
             return False
+
+
+class SaveTrendImages(luigi.Task):
+
+    fp = luigi.Parameter()
+
+    def requires(self):
+        return TrimTrendsTaskWrapper()
+
+    def output(self):
+        name = Path(fp).stem.replace('trimmed', 'img')
+        fname = '{}_{}.jpg'.format(name, self.img_dict.keys[0])
+        fout = IMAGES_DIR / fname
+
+        return luigi.LocalTarget(fout)
+
+    def run(self):
+        import ipdb; ipdb.set_trace()
+
+        from get_images import run as get_images
+
+        args_dict = {
+            'input': Path(self.fp),
+            'output': Path(self.fp).stem
+        }
+
+        self.img_dict = get_images(args_dict)
+
+        with open(self.output(), 'wb') as img:
+            response = requests.get(self.img_dict['url']).content
+            img.write(response)
+
+
+class SaveImagesTaskWrapper(luigi.WrapperTask):
+
+    is_complete = False
+
+    def requires(self):
+        return TrimTrendsTaskWrapper()
+
+    def run(self):
+        trimmed_trends = self.requires()
+        trimmed_trends_paths = [
+            Path(fp.path) for fp in trimmed_trends.input()
+        ]
+
+        import ipdb; ipdb.set_trace()
+
+        for fp in trimmed_trends_paths:
+            yield SaveTrendImages(fp=fp)
+
+        self.is_complete = True
+
+    def complete(self):
+        if self.is_complete:
+            return True
+        else:
+            return False
+
 
 
 if __name__ == '__main__':
