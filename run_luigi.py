@@ -198,20 +198,29 @@ class GenerateData(luigi.Task):
 
         opath = og_d.split('/')[-1].replace('csv', 'json')
         out = SHOPIFY_JSON / opath
+        fout = str(out.absolute()).replace('trimmed_', '')
 
-        self.meta_dict = {
+        meta_dict = {
             'og': og_d,
-            'tweet_volume': tweet_volume,
+            'tweet_volume': str(tweet_volume),
             'tweet_url': tweet_url,
             'img': image_fp,
             'title': title,
-            'load': out
+            'load': fout
         }
 
-        json = json.dumps(self.meta_dict, indent=4)
-        f = open(str(out.absolute()), 'w')
-        f.write(json)
+        f = open(self.output().path, 'w')
+        json.dump(meta_dict, f, indent=4)
         f.close()
+
+    def output(self):
+        og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
+        opath = og_d.split('/')[-1].replace('csv', 'json')
+        out = SHOPIFY_JSON / opath        
+        fout = str(out.absolute()).replace('trimmed_', '')
+        os.makedirs(os.path.dirname(fout), exist_ok=True)
+
+        return luigi.LocalTarget(fout)
 
 
 class PostShopify(luigi.Task):
