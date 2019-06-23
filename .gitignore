@@ -2,6 +2,8 @@
 .env
 __pycache__/
 venv/
+env/
+
 notebooks/mitch/images/
 notebooks/mitch/overlay/
 references/code/
