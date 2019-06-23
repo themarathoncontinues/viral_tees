@@ -9,7 +9,7 @@ from luigi.contrib.external_program import ExternalProgramTask
 from pathlib import Path
 from subprocess import Popen, PIPE
 
-from constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR
+from utils.constants import LOG_DIR, DATA_DIR, TRENDS_DIR, TRIMMED_DIR, IMAGES_DIR
 
 
 
@@ -57,7 +57,7 @@ class QueryTwitter(luigi.Task):
         return luigi.LocalTarget(fout)
 
     def run(self):
-        from retrieve_trends import run as retrieve_trends
+        from utils.retrieve_trends import run as retrieve_trends
 
         args_dict = {
             'location': [self.loc]
@@ -116,7 +116,7 @@ class SaveImages(luigi.Task):
         return luigi.LocalTarget(fout)
 
     def run(self):
-        from get_images import run as get_images
+        from utils.get_images import run as get_images
 
         args_dict = {
             'input': self.requires()[0].output().path,
