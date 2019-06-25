@@ -6,8 +6,7 @@ import pandas as pd
 import tweepy
 import json
 
-# For debugging. Remove later!
-import gnureadline
+from utils.constants import SRC_DIR
 from pprint import pprint
 
 '''
@@ -45,7 +44,7 @@ def auth():
     except KeyError:
         from dotenv import load_dotenv
 
-        load_dotenv('/home/git/viral_tees/.env')
+        load_dotenv(SRC_DIR / '.env')
 
         consumer_key = os.getenv('TWITTER_API_KEY')
         consumer_secret = os.getenv('TWITTER_API_SECRET')

@@ -26,7 +26,7 @@ from utils.constants import \
     RESPONSE_JSON
 
 # LOG_FORMAT='%(asctime)s,%(msecs)d|%(name)s|%(levelname)s -',
-LOG_FILE='/home/git/viral_tees/logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
+LOG_FILE = SRC_DIR / 'logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
 vt_logging.basicConfig(
     level=vt_logging.INFO,
     filename=LOG_FILE
@@ -298,18 +298,18 @@ class RunPipeline(luigi.WrapperTask):
         locations = [
                 'usa-nyc',
                 'usa-lax',
-                'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-chi',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]
