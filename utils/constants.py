@@ -1,14 +1,6 @@
-import os
-import sys
-
 from pathlib import Path
 
-if sys.platform == "darwin":
-	SRC_DIR = Path(os.getcwd()).absolute()
-elif sys.platform == "linux2":
-	SRC_DIR = Path('/home/git/viral_tees')
-else:
-	raise Exception('This system is not supported yet.')
+SRC_DIR = Path('/home/git/viral_tees')
 
 DATA_DIR = SRC_DIR / 'data'
 TRENDS_DIR = DATA_DIR / 'trends'
