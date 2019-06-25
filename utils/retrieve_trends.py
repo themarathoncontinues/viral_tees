@@ -6,9 +6,8 @@ import pandas as pd
 import tweepy
 import json
 
-# For debugging. Remove later!
-import gnureadline
-from pprint import pprint
+from utils.constants import SRC_DIR
+
 
 '''
 Here we have defined variables holding
