@@ -26,7 +26,7 @@ from utils.constants import \
     RESPONSE_JSON
 
 # LOG_FORMAT='%(asctime)s,%(msecs)d|%(name)s|%(levelname)s -',
-LOG_FILE = SRC_DIR / 'logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
+LOG_FILE='/home/git/viral_tees/logs/{}'.format(datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log"))
 vt_logging.basicConfig(
     level=vt_logging.INFO,
     filename=LOG_FILE
