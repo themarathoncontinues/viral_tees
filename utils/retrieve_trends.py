@@ -7,7 +7,7 @@ import tweepy
 import json
 
 from utils.constants import SRC_DIR
-from pprint import pprint
+
 
 '''
 Here we have defined variables holding
