@@ -44,7 +44,7 @@ def auth():
     except KeyError:
         from dotenv import load_dotenv
 
-        load_dotenv('/home/git/viral_tees/.env')
+        load_dotenv(SRC_DIR / '.env')
 
         consumer_key = os.getenv('TWITTER_API_KEY')
         consumer_secret = os.getenv('TWITTER_API_SECRET')
