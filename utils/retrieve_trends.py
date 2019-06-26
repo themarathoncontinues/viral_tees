@@ -44,7 +44,7 @@ def auth():
     except KeyError:
         from dotenv import load_dotenv
 
-        load_dotenv('/home/git/viral_tees/.env')
+        load_dotenv(SRC_DIR / '.env')
 
         consumer_key = os.getenv('TWITTER_API_KEY')
         consumer_secret = os.getenv('TWITTER_API_SECRET')
@@ -91,8 +91,7 @@ def run(args_dict):
         trends_df = get_trends_df(trends_json)
         dfs.update({places: trends_df})
     else:
-        print('Incorrect argument passed.')
-        return -1
+        raise TypeError('Location parameters: must be str or list.')
 
     return dfs
 
