@@ -8,6 +8,7 @@ import tweepy
 from dotenv import load_dotenv
 from pathlib import Path
 
+
 logging.getLogger(__name__)
 
 env_path = Path('.') / '.env'
@@ -57,9 +58,6 @@ def find_target_tweets(trend_one, tweets_with_images):
 
     return trend_one[0], str(id_num), image_url
 
-        # with open('data/images/{}_{}.jpg'.format(trend_one, id_num), 'wb') as handle:
-        #     response = requests.get(image_url).content
-        #     handle.write(response)
 
 def run(args_dict):
 

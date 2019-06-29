@@ -93,7 +93,6 @@ class QueryTwitter(luigi.Task):
         vt_logging.info('Querying Twitter trends.')
 
 
-
 class TrimTrendsData(luigi.Task):
 
     date = luigi.DateMinuteParameter()
@@ -123,7 +122,6 @@ class TrimTrendsData(luigi.Task):
         trimmed_df.to_csv(f, sep=',', encoding='utf-8', index=False)
         f.close()
         vt_logging.info('Munging Twitter trends.')
-
 
 
 class SaveImages(luigi.Task):
@@ -237,7 +235,7 @@ class GenerateData(luigi.Task):
     def output(self):
         og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
         opath = og_d.split('/')[-1].replace('csv', 'json')
-        out = SHOPIFY_JSON / opath        
+        out = SHOPIFY_JSON / opath
         fout = str(out.absolute()).replace('trimmed_', '')
         os.makedirs(os.path.dirname(fout), exist_ok=True)
 
@@ -258,7 +256,7 @@ class PostShopify(luigi.Task):
         )
         fout = RESPONSE_JSON / fout
         os.makedirs(os.path.dirname(fout), exist_ok=True)
-        return luigi.LocalTarget(str(fout.absolute()))        
+        return luigi.LocalTarget(str(fout.absolute()))
 
     def run(self):
         from utils.post_shopify import create_product, post_image
@@ -284,6 +282,7 @@ class PostShopify(luigi.Task):
         f = open(self.output().path, 'w')
         json.dump(r_dict, f, indent=4)
         f.close()
+
 
 class RunPipeline(luigi.WrapperTask):
 
