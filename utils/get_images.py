@@ -7,12 +7,12 @@ import tweepy
 
 from dotenv import load_dotenv
 from pathlib import Path
+from utils.constants import ENV_PATH
 
 
 logging.getLogger(__name__)
 
-env_path = Path('.') / '.env'
-load_dotenv(dotenv_path=env_path)
+load_dotenv(dotenv_path=ENV_PATH)
 
 TWITTER_API_KEY = os.getenv('TWITTER_API_KEY')
 TWITTER_API_SECRET = os.getenv('TWITTER_API_SECRET')

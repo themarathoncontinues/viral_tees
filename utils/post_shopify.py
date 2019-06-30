@@ -3,9 +3,10 @@ import os
 import requests
 
 from dotenv import load_dotenv
+from utils.constants import ENV_PATH
 
 
-load_dotenv('.env')
+load_dotenv(dotenv_path=ENV_PATH)
 
 SHOPIFY_ENDPOINT = os.environ['SHOPIFY_API']
 
