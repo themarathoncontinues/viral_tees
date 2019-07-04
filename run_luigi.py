@@ -112,6 +112,11 @@ class StoreTrendsData(luigi.Task):
     def run(self):
         df = pd.read_csv(self.requires()[0].output().path)
         data = df.to_dict(orient='records')
+        for d in data:
+            d.update({
+                'datestamp': self.date,
+                'loc': self.loc
+            })
         self.insert_idx = self.output().persist(data)
 
 
@@ -319,19 +324,19 @@ class RunPipeline(luigi.WrapperTask):
 
         locations = [
                 'usa-nyc',
-                'usa-lax',
-                'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-lax',
+                # 'usa-chi',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]

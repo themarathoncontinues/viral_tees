@@ -50,15 +50,22 @@ class MongoTarget(Target):
 
 
 # quick utility functions
-def connect_db():
-	client = MongoClient(MONGO_SERVER, MONGO_PORT)
+def connect_db(server=MONGO_SERVER, port=MONGO_PORT):
+	client = MongoClient(server, port)
 	return client
 
-def get_database(client):
-	return client[MONGO_DATABASE]
+def get_database(client, db=MONGO_DATABASE):
+	return client[db]
 
-def get_collection(database):
-	return database[MONGO_COLLECTION]
+def get_collection(db, col=MONGO_COLLECTION):
+	return db[col]
 
-def retrieve_all_data(collection):
-	return [x for x in collection.find({})]
+def post_document(data, col):
+	assert isinstance(data, dict)
+	result = col.insert_one(data)
+	return result
+
+def retrieve_all_data(col):
+	return [x for x in col.find({})]
+
+
