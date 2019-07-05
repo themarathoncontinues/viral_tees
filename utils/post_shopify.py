@@ -96,7 +96,12 @@ def get_products():
 				params=params
 			)
 
-			products.append(response.json()['products'])
+			# handling no products case
+			if len(response.json()['products']) > 0:
+				products.append(response.json()['products'])
+			else:
+				return products
+
 			i += 1
 
 		elif len(products[i-2]) % 250 == 0:
@@ -116,8 +121,11 @@ def get_products():
 		else:
 			is_remaining = False
 
-	products = [products[i][j] for i in range(0, len(products))
-								for j in range(0, len(products[i]))]
+	products = [
+		products[i][j]
+		for i in range(0, len(products))
+		for j in range(0, len(products[i]))
+	]
 
 	return products
 
@@ -134,6 +142,9 @@ def delete_products(product_list):
 		responses (list):		Response objects from Shopify
 								delete API endpoint.
 	"""
+
+	assert (len(product_list) > 0), 'No products to delete!'
+
 	ids = [product['id'] for product in product_list]
 
 	responses = []
