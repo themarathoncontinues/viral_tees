@@ -180,7 +180,6 @@ class StoreTrendsData(luigi.Task):
     # def output(self):
 
 
-
 class TrimTrendsData(luigi.Task):
 
     date = luigi.DateMinuteParameter()
@@ -419,6 +418,7 @@ class RunPipeline(luigi.WrapperTask):
             # image_tasks + \
             # image_overlay + \
             # generate_data + \
+
 
         return tasks
 
