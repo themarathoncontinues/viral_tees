@@ -37,7 +37,7 @@ class MongoTarget(Target):
 	def exists(self):
 		db = self.client[self.database]
 		one = db[self.collection].find_one(self.predicate)
-		self.client = 		self.client.close()
+		self.client = self.client.close()
 		return one is not None
 
 	def persist(self, data):
