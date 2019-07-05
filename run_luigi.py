@@ -10,7 +10,6 @@ import pickle
 from datetime import datetime
 from json import JSONEncoder
 from luigi.contrib.external_program import ExternalProgramTask
-# from luigi.contrib.mongodb import MongoTarget
 from models.mongo import MongoTarget
 from pathlib import Path
 from subprocess import Popen, PIPE
@@ -64,7 +63,7 @@ class StartLogging(luigi.Task):
         return luigi.LocalTarget(fout)
 
 
-class QueryTwitter(luigi.Task):
+class QueryTwitterTrends(luigi.Task):
 
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
@@ -97,15 +96,16 @@ class StoreTrendsData(luigi.Task):
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
     insert_idx = ''
+    collection = 'trends'
 
     def requires(self):
-        return [QueryTwitter(date=self.date, loc=self.loc)]
+        return [QueryTwitterTrends(date=self.date, loc=self.loc)]
 
     def output(self):
         if isinstance(self.insert_idx, list):
-            targets = [MongoTarget(idx) for idx in self.insert_idx]
+            targets = [MongoTarget(self.collection, idx) for idx in self.insert_idx]
         else:
-            targets = MongoTarget(self.insert_idx)
+            targets = MongoTarget(self.collection, self.insert_idx)
 
         return targets
 
@@ -120,6 +120,67 @@ class StoreTrendsData(luigi.Task):
         self.insert_idx = self.output().persist(data)
 
 
+# class StoreTrendTweets(luigi.Task):
+
+#     date = luigi.DateMinuteParameter()
+#     loc = luigi.Parameter()
+#     insert_idx = ''
+#     collection = 'tweets'
+
+#     def requires(self):
+#         return [StoreTrendsData(date=self.date, loc=self.loc)]
+
+#     def output(self):
+#         if isinstance(self.insert_idx, list):
+#             targets = [MongoTarget(self.collection, idx) for idx in self.insert_idx]
+#         else:
+#             targets = MongoTarget(self.collection, self.insert_idx)
+
+#         return targets
+
+#     def run(self):
+#         from models.mongo import connect_db, get_database, get_collection, find_by_id
+#         from utils.get_tweets import query, parse
+
+#         con = connect_db()
+#         db = get_database(con)
+#         rcol = get_collection(db, 'trends')
+#         wcol = get_collection(db, self.collection)
+
+#         trend_id = self.requires()[0].output()[0].predicate
+
+#         import ipdb; ipdb.set_trace()
+
+#         # read data - find id relevant to tweet data from MongoDB
+#         rdata = find_by_id(rcol, trend_id)
+
+#         # write data - get tweets relevant to trend
+#         wdata = query(self.loc, rdata['name'])
+#         wdata = parse(wdata)
+#         for d in wdata:
+#             d.update({'ref_trend_id': trend_id})
+#         self.insert_idx = self.output().persist(wdata)
+
+        # data = query(self.loc,
+        # import ipdb; ipdb.set_trace()
+        # self.requires()[0].output()[0].predicate
+
+
+        # df = pd.read_csv(self.requires()[0].output().path)
+        # data = df.to_dict(orient='records')
+        # for d in data:
+        #     d.update({
+        #         'datestamp': self.date,
+        #         'loc': self.loc
+        #     })
+        # self.insert_idx = self.output().persist(data)
+    # def requires(self):
+    #     return [StoreTrendsData(date=self.date, loc=self.loc)]
+
+    # def output(self):
+
+
+
 class TrimTrendsData(luigi.Task):
 
     date = luigi.DateMinuteParameter()
@@ -132,7 +193,7 @@ class TrimTrendsData(luigi.Task):
         return df.head(n=5)
 
     def requires(self):
-        return [QueryTwitter(date=self.date, loc=self.loc)]
+        return [QueryTwitterTrends(date=self.date, loc=self.loc)]
 
     def output(self):
         fname = self.requires()[0].output().path.split('/')[-1]
@@ -324,39 +385,40 @@ class RunPipeline(luigi.WrapperTask):
 
         locations = [
                 'usa-nyc',
-                # 'usa-lax',
-                # 'usa-chi',
-                # 'usa-dal',
-                # 'usa-hou',
-                # 'usa-wdc',
-                # 'usa-mia',
-                # 'usa-phi',
-                # 'usa-atl',
-                # 'usa-bos',
-                # 'usa-phx',
-                # 'usa-sfo',
-                # 'usa-det',
-                # 'usa-sea',
+                'usa-lax',
+                'usa-chi',
+                'usa-dal',
+                'usa-hou',
+                'usa-wdc',
+                'usa-mia',
+                'usa-phi',
+                'usa-atl',
+                'usa-bos',
+                'usa-phx',
+                'usa-sfo',
+                'usa-det',
+                'usa-sea',
         ]
 
-        twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]
+        twitter_tasks = [QueryTwitterTrends(date=self.date, loc=loc) for loc in locations]
         munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
         image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
         image_overlay = [ImageOverlay(date=self.date, loc=loc) for loc in locations]
         generate_data = [GenerateData(date=self.date, loc=loc) for loc in locations]
         shopify_tasks = [PostShopify(date=self.date, loc=loc) for loc in locations]
 
-        store_data_tasks = [StoreTrendsData(date=self.date, loc=loc) for loc in locations]
+        store_trends = [StoreTrendsData(date=self.date, loc=loc) for loc in locations]
+        # store_tweets = [StoreTrendTweets(date=self.date, loc=loc) for loc in locations]
 
         tasks = base_tasks + \
-            twitter_tasks + \
-            store_data_tasks + \
-            munging_tasks + \
-            image_tasks + \
-            image_overlay + \
-            generate_data + \
+            store_trends + \
             shopify_tasks
-
+            # twitter_tasks + \
+            # store_tweets + \
+            # munging_tasks + \
+            # image_tasks + \
+            # image_overlay + \
+            # generate_data + \
 
         return tasks
 
