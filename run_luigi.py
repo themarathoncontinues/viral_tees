@@ -10,7 +10,6 @@ import pickle
 from datetime import datetime
 from json import JSONEncoder
 from luigi.contrib.external_program import ExternalProgramTask
-from models.mongo import MongoTarget
 from pathlib import Path
 from subprocess import Popen, PIPE
 
@@ -26,13 +25,13 @@ from utils.constants import \
     SHOPIFY_JSON, \
     RESPONSE_JSON
 
+# LOG_FORMAT='%(asctime)s,%(msecs)d|%(name)s|%(levelname)s -',
 
 LOG_FILE = LOG_DIR / datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log")
 vt_logging.basicConfig(
     level=vt_logging.INFO,
     filename=LOG_FILE
 )
-
 
 ####### UTILITY TASKS
 
@@ -41,6 +40,9 @@ class DeepClean(ExternalProgramTask):
     def program_args(self):
         vt_logging.warning('Cleaned data drive.')
         return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
+
+    def output(self):
+        return luigi.LocalTarget('output')
 
 
 ####### PIPELINE
@@ -63,7 +65,7 @@ class StartLogging(luigi.Task):
         return luigi.LocalTarget(fout)
 
 
-class QueryTwitterTrends(luigi.Task):
+class QueryTwitter(luigi.Task):
 
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
@@ -91,94 +93,6 @@ class QueryTwitterTrends(luigi.Task):
         vt_logging.info('Querying Twitter trends.')
 
 
-class StoreTrendsData(luigi.Task):
-
-    date = luigi.DateMinuteParameter()
-    loc = luigi.Parameter()
-    insert_idx = ''
-    collection = 'trends'
-
-    def requires(self):
-        return [QueryTwitterTrends(date=self.date, loc=self.loc)]
-
-    def output(self):
-        if isinstance(self.insert_idx, list):
-            targets = [MongoTarget(self.collection, idx) for idx in self.insert_idx]
-        else:
-            targets = MongoTarget(self.collection, self.insert_idx)
-
-        return targets
-
-    def run(self):
-        df = pd.read_csv(self.requires()[0].output().path)
-        data = df.to_dict(orient='records')
-        for d in data:
-            d.update({
-                'datestamp': self.date,
-                'loc': self.loc
-            })
-        self.insert_idx = self.output().persist(data)
-
-
-# class StoreTrendTweets(luigi.Task):
-
-#     date = luigi.DateMinuteParameter()
-#     loc = luigi.Parameter()
-#     insert_idx = ''
-#     collection = 'tweets'
-
-#     def requires(self):
-#         return [StoreTrendsData(date=self.date, loc=self.loc)]
-
-#     def output(self):
-#         if isinstance(self.insert_idx, list):
-#             targets = [MongoTarget(self.collection, idx) for idx in self.insert_idx]
-#         else:
-#             targets = MongoTarget(self.collection, self.insert_idx)
-
-#         return targets
-
-#     def run(self):
-#         from models.mongo import connect_db, get_database, get_collection, find_by_id
-#         from utils.get_tweets import query, parse
-
-#         con = connect_db()
-#         db = get_database(con)
-#         rcol = get_collection(db, 'trends')
-#         wcol = get_collection(db, self.collection)
-
-#         trend_id = self.requires()[0].output()[0].predicate
-
-#         import ipdb; ipdb.set_trace()
-
-#         # read data - find id relevant to tweet data from MongoDB
-#         rdata = find_by_id(rcol, trend_id)
-
-#         # write data - get tweets relevant to trend
-#         wdata = query(self.loc, rdata['name'])
-#         wdata = parse(wdata)
-#         for d in wdata:
-#             d.update({'ref_trend_id': trend_id})
-#         self.insert_idx = self.output().persist(wdata)
-
-        # data = query(self.loc,
-        # import ipdb; ipdb.set_trace()
-        # self.requires()[0].output()[0].predicate
-
-
-        # df = pd.read_csv(self.requires()[0].output().path)
-        # data = df.to_dict(orient='records')
-        # for d in data:
-        #     d.update({
-        #         'datestamp': self.date,
-        #         'loc': self.loc
-        #     })
-        # self.insert_idx = self.output().persist(data)
-    # def requires(self):
-    #     return [StoreTrendsData(date=self.date, loc=self.loc)]
-
-    # def output(self):
-
 
 class TrimTrendsData(luigi.Task):
 
@@ -192,7 +106,7 @@ class TrimTrendsData(luigi.Task):
         return df.head(n=5)
 
     def requires(self):
-        return [QueryTwitterTrends(date=self.date, loc=self.loc)]
+        return [QueryTwitter(date=self.date, loc=self.loc)]
 
     def output(self):
         fname = self.requires()[0].output().path.split('/')[-1]
@@ -209,6 +123,7 @@ class TrimTrendsData(luigi.Task):
         trimmed_df.to_csv(f, sep=',', encoding='utf-8', index=False)
         f.close()
         vt_logging.info('Munging Twitter trends.')
+
 
 
 class SaveImages(luigi.Task):
@@ -322,7 +237,7 @@ class GenerateData(luigi.Task):
     def output(self):
         og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
         opath = og_d.split('/')[-1].replace('csv', 'json')
-        out = SHOPIFY_JSON / opath
+        out = SHOPIFY_JSON / opath        
         fout = str(out.absolute()).replace('trimmed_', '')
         os.makedirs(os.path.dirname(fout), exist_ok=True)
 
@@ -343,7 +258,7 @@ class PostShopify(luigi.Task):
         )
         fout = RESPONSE_JSON / fout
         os.makedirs(os.path.dirname(fout), exist_ok=True)
-        return luigi.LocalTarget(str(fout.absolute()))
+        return luigi.LocalTarget(str(fout.absolute()))        
 
     def run(self):
         from utils.post_shopify import create_product, post_image
@@ -369,7 +284,6 @@ class PostShopify(luigi.Task):
         f = open(self.output().path, 'w')
         json.dump(r_dict, f, indent=4)
         f.close()
-
 
 class RunPipeline(luigi.WrapperTask):
 
@@ -399,26 +313,20 @@ class RunPipeline(luigi.WrapperTask):
                 'usa-sea',
         ]
 
-        twitter_tasks = [QueryTwitterTrends(date=self.date, loc=loc) for loc in locations]
+        twitter_tasks = [QueryTwitter(date=self.date, loc=loc) for loc in locations]
         munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
         image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
         image_overlay = [ImageOverlay(date=self.date, loc=loc) for loc in locations]
         generate_data = [GenerateData(date=self.date, loc=loc) for loc in locations]
         shopify_tasks = [PostShopify(date=self.date, loc=loc) for loc in locations]
 
-        store_trends = [StoreTrendsData(date=self.date, loc=loc) for loc in locations]
-        # store_tweets = [StoreTrendTweets(date=self.date, loc=loc) for loc in locations]
-
         tasks = base_tasks + \
-            store_trends + \
+            twitter_tasks + \
+            munging_tasks + \
+            image_tasks + \
+            image_overlay + \
+            generate_data + \
             shopify_tasks
-            # twitter_tasks + \
-            # store_tweets + \
-            # munging_tasks + \
-            # image_tasks + \
-            # image_overlay + \
-            # generate_data + \
-
 
         return tasks
 

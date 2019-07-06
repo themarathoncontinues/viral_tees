@@ -5,8 +5,10 @@ venv/
 env/
 logs/
 
-notebooks/
-references/
+notebooks/mitch/images/
+notebooks/mitch/overlay/
+references/code/
+references/*.zip
 .DS_Store
 data/
 token.pickle

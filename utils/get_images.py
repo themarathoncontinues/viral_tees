@@ -7,12 +7,11 @@ import tweepy
 
 from dotenv import load_dotenv
 from pathlib import Path
-from utils.constants import ENV_PATH
-
 
 logging.getLogger(__name__)
 
-load_dotenv(dotenv_path=ENV_PATH)
+env_path = Path('.') / '.env'
+load_dotenv(dotenv_path=env_path)
 
 TWITTER_API_KEY = os.getenv('TWITTER_API_KEY')
 TWITTER_API_SECRET = os.getenv('TWITTER_API_SECRET')
@@ -58,6 +57,9 @@ def find_target_tweets(trend_one, tweets_with_images):
 
     return trend_one[0], str(id_num), image_url
 
+        # with open('data/images/{}_{}.jpg'.format(trend_one, id_num), 'wb') as handle:
+        #     response = requests.get(image_url).content
+        #     handle.write(response)
 
 def run(args_dict):
 
