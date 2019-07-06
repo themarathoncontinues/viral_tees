@@ -419,7 +419,6 @@ class RunPipeline(luigi.WrapperTask):
             # image_overlay + \
             # generate_data + \
 
-
         return tasks
 
     def run(self):
