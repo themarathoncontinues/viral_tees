@@ -27,6 +27,7 @@ from utils.constants import \
     RESPONSE_JSON
 
 
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / datetime.now().strftime("vt_%Y-%m-%d_%H:%M:%S.log")
 vt_logging.basicConfig(
     level=vt_logging.INFO,
