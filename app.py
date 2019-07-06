@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, send_from_directory, url_for
 from models.mongo import connect_db, get_collection, retrieve_all_data, find_by_id
-from utils.constants import IMAGES_DIR, LOG_DIR
+from utils.constants import SRC_DIR, IMAGES_DIR, LOG_DIR
 from utils.post_shopify import get_products, delete_products
 
 
@@ -60,9 +60,9 @@ def shop_delete():
 
 @app.route('/images-view')
 def image_data():
-	data = [x for x in IMAGES_DIR.iterdir()]
+	data = [x.relative_to(SRC_DIR) for x in IMAGES_DIR.iterdir()]
 	data = {x.name: str(x) for x in data}
-
+	
 	return render_template(
 		'images.html',
 		header='Images',
