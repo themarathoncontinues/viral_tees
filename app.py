@@ -12,7 +12,10 @@ app._static_folder = str(IMAGES_DIR)
 @app.route('/')
 @app.route('/home')
 def index():
-    return render_template('index.html')
+    return render_template(
+    	'index.html',
+    	header='Home'
+    )
 
 
 @app.route('/trends-view')
@@ -37,7 +40,7 @@ def shop_data():
 	return render_template(
 		'shopify.html',
 		header='Shopify',
-		subheader='Live Shirts',
+		subheader='Live Products',
 		data=data
 	)
 
