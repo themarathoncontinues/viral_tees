@@ -7,7 +7,7 @@ import time
 from dotenv import load_dotenv
 from luigi import Target
 from pathlib import Path
-from pymongo import MongoClient
+from pymongo import MongoClient, ASCENDING, DESCENDING
 from utils.constants import ENV_PATH, TRENDS_DIR
 
 
@@ -77,8 +77,9 @@ def post_document(data, col):
 	return result
 
 
-def retrieve_all_data(col):
-	return [x for x in col.find({})]
+def retrieve_all_data(col, limit=3500):
+	data = [x for x in col.find().sort('datestamp', DESCENDING).limit(limit)]
+	return data
 
 
 def find_by_id(col, idx):

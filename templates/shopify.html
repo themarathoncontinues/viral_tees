@@ -1,11 +1,18 @@
 {% extends 'base.html' %}
 
+{% block metadata %}<meta http-equiv="refresh" content="30">{% endblock %}
+
 {% block header %}
-  {{ header }}
-{% endblock %}
+    <h1 class="display-5">{{ header }}</h1>
+
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <a href="/shopify-delete">
+        <button id="delete_shopify" type="button" class="btn btn-sm btn-danger">Delete All</button>
+      </a>
+    </div>{% endblock %}
 
 {% block subheader %}
-  {{ subheader }}
+  {{ subheader }}  <small class="text-mute h6" style="opacity: .5">Newest to oldest, top to bottom</small>
 {% endblock %}
 
 {% block content %}
@@ -18,7 +25,7 @@
     <div class="card-body">
       <h5 class="card-title">{{ d['title'] }}</h5>
       <a href="https://viraltees.io/products/{{ d['handle'] }}" class="card-text">Shopify: {{ d['id'] }}</a>
-      <p class="card-text"><small class="text-muted">Created {{ d['created_at'] }}</small></p>
+      <p class="card-text"><small class="text-muted">Posted: <br>{{ d['created_at'] }}</small></p>
     </div>
   </div>
   {% endfor %}

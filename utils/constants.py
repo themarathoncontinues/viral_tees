@@ -14,16 +14,16 @@ else:
 ##### DIRECTORIES
 
 DATA_DIR = SRC_DIR / 'data'
+LOG_DIR = SRC_DIR / 'logs'
+STATIC_DIR = SRC_DIR / 'static'
 
 TRENDS_DIR = DATA_DIR / 'trends'
 TRIMMED_DIR = DATA_DIR / 'trimmed'
-IMAGES_DIR = DATA_DIR / 'images'
+IMAGES_DIR = STATIC_DIR / 'images'
 SHIRTS_DIR = DATA_DIR / 'shirts'
 SHOPIFY_JSON = DATA_DIR / 'json'
 RESPONSE_JSON = DATA_DIR / 'response'
 
-LOG_DIR = SRC_DIR / 'logs'
-STATIC_DIR = SRC_DIR / 'static'
 
 ##### FILEPATHS
 
