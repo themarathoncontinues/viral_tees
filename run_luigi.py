@@ -180,7 +180,6 @@ class StoreTrendsData(luigi.Task):
     # def output(self):
 
 
-
 class TrimTrendsData(luigi.Task):
 
     date = luigi.DateMinuteParameter()
