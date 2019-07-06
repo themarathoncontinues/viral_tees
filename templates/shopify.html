@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block subheader %}
-  {{ subheader }}
+  {{ subheader }}  <small class="text-mute h6" style="opacity: .5">Newest to oldest, top to bottom</small>
 {% endblock %}
 
 {% block content %}
@@ -18,7 +18,7 @@
     <div class="card-body">
       <h5 class="card-title">{{ d['title'] }}</h5>
       <a href="https://viraltees.io/products/{{ d['handle'] }}" class="card-text">Shopify: {{ d['id'] }}</a>
-      <p class="card-text"><small class="text-muted">Created {{ d['created_at'] }}</small></p>
+      <p class="card-text"><small class="text-muted">Posted: <br>{{ d['created_at'] }}</small></p>
     </div>
   </div>
   {% endfor %}

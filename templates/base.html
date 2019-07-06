@@ -32,9 +32,9 @@
       }
 
       .card-columns {
-        -webkit-column-count:5;
-        -moz-column-count:5;
-        column-count:5;
+        -webkit-column-count:6;
+        -moz-column-count:6;
+        column-count:6;
 
         @include media-breakpoint-only(lg) {
           column-count: 4;
@@ -50,16 +50,16 @@
    left: 0;
    position: fixed;
    display: block;
-   opacity: 0.7;
+   opacity: 0.8;
    background-color: #fff;
-   z-index: 99;
+   z-index: 999;
    text-align: center;
 }
 
 #loading-image {
   position: relative;
-  top: 100px;
-  z-index: 100;
+  top: 40%;
+  z-index: 1000;
 }
 
       .table [data-sort] {
@@ -75,7 +75,7 @@
   </head>
   <body>
 <div id="loading">
-  <img id="loading-image" src="http://freepreloaders.com/wp-content/uploads/2019/05/3-1.svg" alt="Loading..." />
+  <img id="loading-image" src="http://freepreloaders.com/wp-content/uploads/2019/05/puff-1.svg" alt="Loading..." />
 </div>
 
     <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
@@ -108,7 +108,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="/images-view">
               <span data-feather="image"></span>
               Images
             </a>
@@ -170,7 +170,7 @@
 
     <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
       <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mt-2 mb-3 border-bottom">
-        <h1 class="h2">{% block header %}{% endblock %}</h1>
+        <h1 class="display-5">{% block header %}{% endblock %}</h1>
 <!--         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group mr-2">
             <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>

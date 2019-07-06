@@ -3,7 +3,9 @@ from models.mongo import connect_db, get_collection, retrieve_all_data, find_by_
 from utils.constants import IMAGES_DIR
 from utils.post_shopify import get_products, delete_products
 
+
 app = Flask(__name__)
+
 
 @app.route('/')
 @app.route('/home')
@@ -20,13 +22,13 @@ def trend_data():
 	return render_template(
 		'trends.html',
 		header='Trends',
-		subheader='Data',
 		data=data
 	)
 
 @app.route('/shopify-view')
 def shop_data():
 	data = get_products()
+	data = sorted(data, key=lambda x: x['created_at'], reverse=True)
 
 	return render_template(
 		'shopify.html',
@@ -42,9 +44,8 @@ def image_data():
 	return render_template(
 		'images.html',
 		header='Images',
-		subheader='Image',
 		data=data
 	)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+	app.run(debug=True)
