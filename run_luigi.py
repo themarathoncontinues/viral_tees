@@ -385,22 +385,22 @@ class RunPipeline(luigi.WrapperTask):
         locations = [
                 'usa-nyc',
                 'usa-lax',
-                'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-chi',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitterTrends(date=self.date, loc=loc) for loc in locations]
-        munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
+        munging_taskst = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
         image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
         image_overlay = [ImageOverlay(date=self.date, loc=loc) for loc in locations]
         generate_data = [GenerateData(date=self.date, loc=loc) for loc in locations]
