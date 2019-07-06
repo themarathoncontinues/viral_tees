@@ -6,7 +6,8 @@ import pandas as pd
 import tweepy
 import json
 
-from utils.constants import SRC_DIR
+from dotenv import load_dotenv
+from utils.constants import ENV_PATH, SRC_DIR
 
 
 '''
@@ -42,9 +43,8 @@ def auth():
         access_token = os.environ['TWITTER_ACCESS_TOKEN']
         access_token_secret = os.environ['TWITTER_TOKEN_SECRET']
     except KeyError:
-        from dotenv import load_dotenv
 
-        load_dotenv(SRC_DIR / '.env')
+        load_dotenv(dotenv_path=ENV_PATH)
 
         consumer_key = os.getenv('TWITTER_API_KEY')
         consumer_secret = os.getenv('TWITTER_API_SECRET')
