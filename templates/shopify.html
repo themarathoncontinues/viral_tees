@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  {{ header }}
-{% endblock %}
+    <h1 class="display-5">{{ header }}</h1>
+
+    <div class="btn-toolbar mb-2 mb-md-0">
+      <a href="/shopify-delete">
+        <button id="delete_shopify" type="button" class="btn btn-sm btn-danger">Delete All</button>
+      </a>
+    </div>{% endblock %}
 
 {% block subheader %}
   {{ subheader }}  <small class="text-mute h6" style="opacity: .5">Newest to oldest, top to bottom</small>

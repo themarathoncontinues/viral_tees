@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  {{ header }}
-{% endblock %}
+    <h1 class="display-5">{{ header }}</h1>
+    {% endblock %}
 
 {% block subheader %}
   {{ subheader }}
@@ -11,12 +11,12 @@
 {% block content %}
 
 <div class="card-columns">
-  {% for d in data %}
+  {% for k, v in data.items() %}
   <div class="card">
     <br>
-    <img class="card-img-top" src="{{ d.absolute }}" alt="Card image cap">
+    <img class="card-img-top" src="{{ v }}" alt="Image">
     <div class="card-body">
-      <p class="card-text"><small class="text-muted">{{ d.name }}</small></p>
+      <p class="card-text"><small class="text-muted">{{ k }}</small></p>
     </div>
   </div>
   {% endfor %}
