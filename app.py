@@ -28,6 +28,7 @@ def trend_data():
 	return render_template(
 		'trends.html',
 		header='Trends',
+		subheader='Data',
 		data=data
 	)
 
