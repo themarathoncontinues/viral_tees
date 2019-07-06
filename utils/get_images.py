@@ -2,15 +2,14 @@ import json
 import logging
 import os
 import pandas as pd
-import requests
 import tweepy
 
 from dotenv import load_dotenv
 from pathlib import Path
 from utils.constants import ENV_PATH
 
-
-logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 load_dotenv(dotenv_path=ENV_PATH)
 
@@ -26,45 +25,68 @@ api = tweepy.API(auth)
 
 
 def tweepy_parser(filepath):
-    nyc_trends = pd.read_csv(filepath)
-    trends = nyc_trends['name'].tolist()
-    trend_one = trends[:1]
+    """
+    Query Twitter to get MAX_TWEETS per trend in given metro region
+    :param filepath:
+    :return list of tweets with images:
+    """
+    metro_trend = pd.read_csv(filepath)
+    trends = metro_trend['name'].tolist()
 
     MAX_TWEETS = 100
 
+    metadata_store = []
     tweets_with_images = []
-    for tweet in tweepy.Cursor(api.search, q=trend_one, include_entities=True).items(MAX_TWEETS):
-        if 'media' in tweet.entities:
+    for trend in trends:
+        tweet_cursor = tweepy.Cursor(api.search, q=trend, include_entities=True).items(MAX_TWEETS)
+
+        for tweet in tweet_cursor:
             json_str = json.dumps(tweet._json)
-            parsable_obj = json.loads(json_str)
-            tweets_with_images.append(parsable_obj)
-        else:
-            pass
+            model = json.loads(json_str)
+
+            user = model['user']['screen_name']
+            tweet_id = model['id_str']
+            follower_count = model['user']['followers_count']
+            retweet_count = model['retweet_count']
+            favorte_count = model['favorite_count']
+
+            tweet_metadata = {
+                'user': user,
+                'tweet_id': tweet_id,
+                'trend': trend,
+                'follower_count': follower_count,
+                'retweet_count': retweet_count,
+                'favorite_count': favorte_count,
+                'media_url': 'n/a'
+            }
+
+            if 'media' not in tweet.entities:
+                metadata_store.append(tweet_metadata)
+            else:
+                media_url = model['entities']['media'][0]['media_url']
+                media = {'media_url': media_url}
+                tweet_metadata.update(media)
+
+                metadata_store.append(tweet_metadata)
+                tweets_with_images.append(tweet_metadata)
 
     amount_of_tweets_obtained = len(tweets_with_images)
-    logging.info('Using {} tweets to select images'.format(amount_of_tweets_obtained))
+    logger.info(f'Using {amount_of_tweets_obtained} tweets to select images')
 
-    return trend_one, tweets_with_images
+    return tweets_with_images
 
 
-def find_target_tweets(trend_one, tweets_with_images):
+def sort_tweets_with_images(tweets_with_images):
+    sorted_tweets = sorted(tweets_with_images, key=lambda x: (x['retweet_count'], x['favorite_count']), reverse=True)
 
-    url = {}
-    tweet = tweets_with_images[0]
-    id_num = tweet['id']
-    image_url = tweet['entities']['media'][0]['media_url']
-
-    logging.info('Images returned to Luigi')
-
-    return trend_one[0], str(id_num), image_url
+    return sorted_tweets
 
 
 def run(args_dict):
+    tweet_list = tweepy_parser(args_dict['input'])
+    images = sort_tweets_with_images(tweet_list)
 
-    top_trend, img_lst = tweepy_parser(args_dict['input'])
-    urls = find_target_tweets(top_trend, img_lst)
-
-    return urls
+    return images
 
 
 if __name__ == '__main__':
