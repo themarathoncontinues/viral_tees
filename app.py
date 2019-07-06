@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, redirect
 from models.mongo import connect_db, get_collection, retrieve_all_data, find_by_id
+from utils.constants import IMAGES_DIR
 from utils.post_shopify import get_products, delete_products
 
 app = Flask(__name__)
@@ -31,6 +32,17 @@ def shop_data():
 		'shopify.html',
 		header='Shopify',
 		subheader='Live Shirts',
+		data=data
+	)
+
+@app.route('/images-view')
+def image_data():
+	data = [x for x in IMAGES_DIR.iterdir()]
+
+	return render_template(
+		'images.html',
+		header='Images',
+		subheader='Image',
 		data=data
 	)
 
