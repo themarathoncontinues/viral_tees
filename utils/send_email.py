@@ -71,7 +71,7 @@ def create_message_with_attachment(
 
     Returns:
         An object containing a base64url encoded email object.
-  """
+    """
 
     message = MIMEMultipart()
 
