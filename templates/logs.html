@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1 class="display-5">{{ header }}</h1>
+    {% endblock %}
+
+{% block subheader %}
+  {{ subheader }}
+{% endblock %}
+
+{% block content %}
+
+  <div class="card" style="margin-bottom: 20px;">
+      <ul class="list-group list-group-flush">
+
+  {% for k, v in data.items() %}
+
+    <li class="list-group-item"><a href="logs/{{ k }}" download>{{ k }}</a></li>
+
+  {% endfor %}
+    </ul>
+</div>
+{% endblock %}

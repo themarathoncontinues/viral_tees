@@ -1,13 +1,13 @@
 from flask import Flask, request, render_template, redirect, url_for
 from models.mongo import connect_db, get_collection, retrieve_all_data, find_by_id
-from utils.constants import IMAGES_DIR
+from utils.constants import IMAGES_DIR, LOG_DIR
 from utils.post_shopify import get_products, delete_products
 
 
 app = Flask(__name__)
 app.debug = True
 app.secret_key = 'secret'
-app._static_folder = str(IMAGES_DIR)
+app.config['STATIC_FOLDER'] = str(LOG_DIR)
 
 @app.route('/')
 @app.route('/home')
@@ -66,6 +66,19 @@ def image_data():
 	return render_template(
 		'images.html',
 		header='Images',
+		data=data
+	)
+
+
+@app.route('/logs-view')
+def logs_data():
+	data = [x for x in LOG_DIR.iterdir()]
+	data = sorted(data, reverse=True)
+	data = {x.name: str(x) for x in data}
+
+	return render_template(
+		'logs.html',
+		header='Reports',
 		data=data
 	)
 
