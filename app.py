@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, send_from_directory, url_for
 from models.mongo import connect_db, get_collection, retrieve_all_data, find_by_id
 from utils.constants import IMAGES_DIR, LOG_DIR
 from utils.post_shopify import get_products, delete_products
@@ -71,16 +71,20 @@ def image_data():
 
 
 @app.route('/logs-view')
-def logs_data():
-	data = [x for x in LOG_DIR.iterdir()]
-	data = sorted(data, reverse=True)
-	data = {x.name: str(x) for x in data}
+@app.route('/logs-view/<fname>')
+def logs_data(fname=None):
+	if fname:
+		return send_from_directory(directory=LOG_DIR, filename=fname)
+	else:
+		data = [x for x in LOG_DIR.iterdir()]
+		data = sorted(data, reverse=True)
+		data = {x.name: str(x) for x in data}
 
-	return render_template(
-		'logs.html',
-		header='Reports',
-		data=data
-	)
+		return render_template(
+			'logs.html',
+			header='Reports',
+			data=data
+		)
 
 
 if __name__ == "__main__":
