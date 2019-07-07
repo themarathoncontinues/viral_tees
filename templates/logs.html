@@ -10,15 +10,12 @@
 
 {% block content %}
 
-<div class="card-columns">
+  <div class="card" style="margin-bottom: 20px;">
+      <ul class="list-group list-group-flush">
+
   {% for k, v in data.items() %}
-  <div class="card">
-    <br>
-    <img class="card-img-top" src="{{ v }}" alt="Image">
-    <div class="card-body">
-      <p class="card-text"><small class="text-muted">{{ k }}</small></p>
-    </div>
-  </div>
+    <li class="list-group-item"><a href="logs-view/{{ k }}">{{ k }}</a></li>
   {% endfor %}
+    </ul>
 </div>
 {% endblock %}
