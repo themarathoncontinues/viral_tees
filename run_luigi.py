@@ -223,7 +223,7 @@ class SaveImages(luigi.Task):
         return [TrimTrendsData(date=self.date, loc=self.loc)]
 
     def output(self):
-        fname = '{}_{}.jpg'.format(self.meta_dict['fname_trend'], self.meta_dict['fname_user'])
+        fname = '{}_{}.jpg'.format(self.meta_dict['fname_user'], self.meta_dict['fname_trend'])
         fout = IMAGES_DIR / fname
 
         return luigi.LocalTarget(fout)
@@ -394,19 +394,18 @@ class RunPipeline(luigi.WrapperTask):
 
         locations = [
                 'usa-nyc',
-                # 'usa-lax',
-                # 'usa-chi',
-                # 'usa-dal',
-                # 'usa-hou',
-                # 'usa-wdc',
-                # 'usa-mia',
-                # 'usa-phi',
-                # 'usa-atl',
-                # 'usa-bos',
-                # 'usa-phx',
-                # 'usa-sfo',
-                # 'usa-det',
-                # 'usa-sea',
+                'usa-lax',
+                'usa-chi',
+                'usa-dal',
+                'usa-hou',
+                'usa-wdc',
+                'usa-mia',
+                'usa-phi',
+                'usa-atl',
+                'usa-bos',
+                'usa-sfo',
+                'usa-det',
+                'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitterTrends(date=self.date, loc=loc) for loc in locations]

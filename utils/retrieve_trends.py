@@ -60,6 +60,8 @@ def auth():
 
 def get_trends(api, location):
 
+    data = api.rate_limit_status()
+    print(data['resources']['trends']['/trends/place'])
     return api.trends_place(location)
 
 

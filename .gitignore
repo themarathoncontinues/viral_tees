@@ -1,15 +1,23 @@
+# IDE
 .idea/
+
+# (dot)ENV
 .env
 __pycache__/
+
+# env
 venv/
 env/
-logs/
 
+
+logs/
 notebooks/
 references/
 .DS_Store
 data/
 token.pickle
 *.swp
-
 final_vt*
+
+.ipynb_checkpoints
+mongo_to_df.ipynb

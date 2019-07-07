@@ -34,12 +34,15 @@ def tweepy_parser(filepath):
     metro_trend = pd.read_csv(filepath)
     trends = metro_trend['name'].tolist()
 
-    MAX_TWEETS = 100
+    MAX_TWEETS = 20
 
     metadata_store = []
     tweets_with_images = []
     for trend in trends:
         tweet_cursor = tweepy.Cursor(api.search, q=trend, include_entities=True).items(MAX_TWEETS)
+
+        data = api.rate_limit_status()
+        print(data['resources']['search']['/search/tweets'])
 
         for tweet in tweet_cursor:
             json_str = json.dumps(tweet._json)
