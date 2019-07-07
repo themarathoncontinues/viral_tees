@@ -89,4 +89,8 @@ def logs_data(fname=None):
 
 
 if __name__ == "__main__":
-	app.run()
+	# if you want to access from any device on your network
+	# change the '0.0.0.0' to your IP address.
+	# this domain will allow you to see the site from any
+	# device connected to your network.
+	app.run(host='0.0.0.0', port=5000)
