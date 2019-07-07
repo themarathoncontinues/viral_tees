@@ -215,14 +215,14 @@ class SaveImages(luigi.Task):
 
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
-    img_dict = ['', '', '']
+    img_dict = []
+    meta_dict = {'fname_trend': '', 'fname_user': ''}
 
     def requires(self):
         return [TrimTrendsData(date=self.date, loc=self.loc)]
 
     def output(self):
-        # fname = self.requires()[0].output().path.split('/')[-1].replace('.csv', '.jpg')
-        fname = '{}_{}.jpg'.format(self.img_dict[0], self.img_dict[1])
+        fname = '{}_{}.jpg'.format(self.meta_dict['fname_trend'], self.meta_dict['fname_user'])
         fout = IMAGES_DIR / fname
 
         return luigi.LocalTarget(fout)
@@ -236,14 +236,23 @@ class SaveImages(luigi.Task):
         }
 
         self.img_dict = get_images(args_dict)
-        response = requests.get(self.img_dict[2]).content
+        vt_logging.info('Started saving Twitter trends images')
 
-        fname = self.output().path
-        os.makedirs(os.path.dirname(fname), exist_ok=True)
-        f = open(fname, 'wb')
-        f.write(response)
-        f.close()
-        vt_logging.info('Saving Twitter trends images.')
+        for record in self.img_dict:
+            response = requests.get(record['media_url']).content
+
+            self.meta_dict = {
+                'fname_trend': record['trend'],
+                'fname_user': record['user']
+            }
+
+            fname = self.output().path
+            os.makedirs(os.path.dirname(fname), exist_ok=True)
+            f = open(fname, 'wb')
+            f.write(response)
+            f.close()
+
+        vt_logging.info('Finished saving Twitter trends images.')
 
 
 class ImageOverlay(luigi.Task):
@@ -384,23 +393,23 @@ class RunPipeline(luigi.WrapperTask):
 
         locations = [
                 'usa-nyc',
-                'usa-lax',
-                'usa-chi',
-                'usa-dal',
-                'usa-hou',
-                'usa-wdc',
-                'usa-mia',
-                'usa-phi',
-                'usa-atl',
-                'usa-bos',
-                'usa-phx',
-                'usa-sfo',
-                'usa-det',
-                'usa-sea',
+                # 'usa-lax',
+                # 'usa-chi',
+                # 'usa-dal',
+                # 'usa-hou',
+                # 'usa-wdc',
+                # 'usa-mia',
+                # 'usa-phi',
+                # 'usa-atl',
+                # 'usa-bos',
+                # 'usa-phx',
+                # 'usa-sfo',
+                # 'usa-det',
+                # 'usa-sea',
         ]
 
         twitter_tasks = [QueryTwitterTrends(date=self.date, loc=loc) for loc in locations]
-        munging_tasks = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
+        munging_taskst = [TrimTrendsData(date=self.date, loc=loc) for loc in locations]
         image_tasks = [SaveImages(date=self.date, loc=loc) for loc in locations]
         image_overlay = [ImageOverlay(date=self.date, loc=loc) for loc in locations]
         generate_data = [GenerateData(date=self.date, loc=loc) for loc in locations]

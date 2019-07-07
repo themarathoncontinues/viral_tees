@@ -62,11 +62,14 @@ def connect_db(server=MONGO_SERVER, port=MONGO_PORT):
 	client = MongoClient(server, port)
 	return client
 
+
 def get_database(client, db=MONGO_DATABASE):
 	return client[db]
 
+
 def get_collection(client, col, db=MONGO_DATABASE):
 	return client[db][col]
+
 
 def post_document(data, col):
 	assert isinstance(data, dict)
@@ -77,8 +80,10 @@ def retrieve_all_data(col, limit=3500):
 	data = [x for x in col.find().sort('datestamp', DESCENDING).limit(limit)]
 	return data
 
+
 def find_by_id(col, idx):
 	return col.find_one({'_id': idx})
+
 
 # this is not currently being used
 def graceful_auto_reconnect(mongo_op_func):
@@ -93,4 +98,4 @@ def graceful_auto_reconnect(mongo_op_func):
 				logging.warning("PyMongo auto-reconnecting... %s. Waiting %.1f seconds.", str(e), wait_t)
 				time.sleep(wait_t)
 
-  return wrapper
+	return wrapper
