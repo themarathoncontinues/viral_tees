@@ -9,7 +9,7 @@ from utils.post_shopify import get_products, delete_products
 
 load_dotenv(dotenv_path=ENV_PATH)
 
-LOCAL = os.getenv('IP_ADD')
+LOCAL = os.getenv('IP_ADDRESS')
 
 
 app = Flask(__name__)
