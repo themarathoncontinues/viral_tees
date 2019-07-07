@@ -1,7 +1,15 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, request, render_template, redirect, send_from_directory, url_for
 from models.mongo import connect_db, get_collection, retrieve_all_data, find_by_id
-from utils.constants import SRC_DIR, IMAGES_DIR, LOG_DIR
+from utils.constants import SRC_DIR, IMAGES_DIR, LOG_DIR, ENV_PATH
 from utils.post_shopify import get_products, delete_products
+
+
+load_dotenv(dotenv_path=ENV_PATH)
+
+LOCAL = os.getenv('IP_ADDRESS')
 
 
 app = Flask(__name__)
@@ -93,4 +101,4 @@ if __name__ == "__main__":
 	# change the '0.0.0.0' to your IP address.
 	# this domain will allow you to see the site from any
 	# device connected to your network.
-	app.run(host='192.168.1.5', port=5000)
+	app.run(host=LOCAL, port=5000)
