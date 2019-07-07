@@ -76,6 +76,7 @@ def post_document(data, col):
 	result = col.insert_one(data)
 	return result
 
+
 def retrieve_all_data(col, limit=3500):
 	data = [x for x in col.find().sort('datestamp', DESCENDING).limit(limit)]
 	return data
