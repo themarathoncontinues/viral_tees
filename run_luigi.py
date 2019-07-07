@@ -223,7 +223,8 @@ class SaveImages(luigi.Task):
         return [TrimTrendsData(date=self.date, loc=self.loc)]
 
     def output(self):
-        fname = '{}_{}.jpg'.format(self.meta_dict['fname_user'], self.meta_dict['fname_trend'])
+        self.meta_dict['fname_trend'] = self.meta_dict['fname_trend'].replace('#', '')
+        fname = '{}_{}.jpg'.format(self.meta_dict['fname_trend'], self.meta_dict['fname_user'])
         fout = IMAGES_DIR / fname
 
         return luigi.LocalTarget(fout)
