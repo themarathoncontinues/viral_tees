@@ -5,6 +5,7 @@ import pandas as pd
 import tweepy
 
 from dotenv import load_dotenv
+from itertools import groupby
 from pathlib import Path
 from utils.constants import ENV_PATH
 
@@ -78,15 +79,16 @@ def tweepy_parser(filepath):
 
 def sort_tweets_with_images(tweets_with_images):
     sorted_tweets = sorted(tweets_with_images, key=lambda x: (x['retweet_count'], x['favorite_count']), reverse=True)
+    unique_tweets = list({v['media_url']: v for v in sorted_tweets}.values())
 
-    return sorted_tweets
+    return unique_tweets
 
 
 def run(args_dict):
     tweet_list = tweepy_parser(args_dict['input'])
-    images = sort_tweets_with_images(tweet_list)
+    image_dicts = sort_tweets_with_images(tweet_list)
 
-    return images
+    return image_dicts
 
 
 if __name__ == '__main__':
