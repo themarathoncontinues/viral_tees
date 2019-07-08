@@ -10,13 +10,20 @@ from dotenv import load_dotenv
 from utils.constants import ENV_PATH, SRC_DIR
 
 
+load_dotenv(dotenv_path=ENV_PATH)
+
+TWITTER_CONSUMER_KEY = os.getenv('TWITTER_API_KEY')
+TWITTER_CONSUMER_SECRET = os.getenv('TWITTER_API_SECRET')
+TWITTER_ACCESS_TOKEN = os.getenv('TWITTER_API_TOKEN')
+TWITTER_TOKEN_SECRET = os.getenv('TWITTER_API_ACCESS')
+
 '''
 Here we have defined variables holding
 WOEID (http://woeid.rosselliot.co.nz/lookup/)
 of 14 largest metropolitan areas in the
 United States.
 '''
-metro = {
+metro_cfg = {
     'global': 1,
     'usa': 23424977,
     'usa-nyc': 2459115,
@@ -35,24 +42,11 @@ metro = {
     'usa-sea': 2490383
 }
 
+
 def auth():
 
-    try:
-        consumer_key = os.environ['TWITTER_CONSUMER_KEY']
-        consumer_secret = os.environ['TWITTER_CONSUMER_SECRET']
-        access_token = os.environ['TWITTER_ACCESS_TOKEN']
-        access_token_secret = os.environ['TWITTER_TOKEN_SECRET']
-    except KeyError:
-
-        load_dotenv(dotenv_path=ENV_PATH)
-
-        consumer_key = os.getenv('TWITTER_API_KEY')
-        consumer_secret = os.getenv('TWITTER_API_SECRET')
-        access_token = os.getenv('TWITTER_API_TOKEN')
-        access_token_secret = os.getenv('TWITTER_API_ACCESS')
-
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
+    auth = tweepy.OAuthHandler(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+    auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_TOKEN_SECRET)
     api = tweepy.API(auth)
 
     return api
@@ -60,40 +54,40 @@ def auth():
 
 def get_trends(api, location):
 
-    data = api.rate_limit_status()
-    print(data['resources']['trends']['/trends/place'])
-    return api.trends_place(location)
+    assert isinstance(location, (str, int)), 'Passed wrong location type!'
+
+    if isinstance(location, str):
+        location = metro_cfg[location]
+    
+    data = api.trends_place(location)[0]
+
+    return data
 
 
 def get_trends_df(trends_json):
 
-    return pd.DataFrame(
-        trends_json[0]['trends']).sort_values(
+    df = pd.DataFrame(trends_json[0]['trends'])
+    df = df.sort_values(
         by=['tweet_volume'],
-        ascending=False).reset_index(
-            drop=True)
+        ascending=False
+    ).reset_index(
+        drop=True
+    )
+
+    return df
 
 
 def run(args_dict):
 
-    places = args_dict['location']
+    loc = args_dict['location']
     api = auth()
 
     dfs = {}
+    woeid = metro_cfg[loc]
 
-    if isinstance(places, list):
-        for place in places:
-            location = metro[place]
-            trends_json = get_trends(api, location)
-            trends_df = get_trends_df(trends_json)
-            dfs.update({place: trends_df})
-    elif isinstance(places, str):
-        location = metro[places]
-        trends_json = get_trends(api, location)
-        trends_df = get_trends_df(trends_json)
-        dfs.update({places: trends_df})
-    else:
-        raise TypeError('Location parameters: must be str or list.')
+    trends_json = get_trends(api, woeid)
+    trends_df = get_trends_df(trends_json)
+    dfs.update({places: trends_df})
 
     return dfs
 
@@ -104,11 +98,10 @@ if __name__ == '__main__':
         description='Service to provide viral tweets for given region.')
     parser.add_argument(
         '-loc', '--location',
-        required=False,
+        required=True,
         nargs=1,
         help='Select region in which trends to chose from.',
-        choices=[code for code in metro.keys()],
-        default=[code for code in metro.keys()]
+        choices=[code for code in metro_cfg.keys()]
     )
 
     args_dict = vars(parser.parse_args())

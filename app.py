@@ -29,15 +29,19 @@ def index():
 @app.route('/trends-view')
 def trend_data():
 	conn = connect_db()
-	col = get_collection(conn, 'trends')
-	data = retrieve_all_data(col)
+	trends = get_collection(conn, 'trends')
+	trimmed = get_collection(conn, 'trimmed')
+	tweets = get_collection(conn, 'tweets')
+	trends_data = retrieve_all_data(trends)
+	trimmed_data = retrieve_all_data(trimmed)
+	tweets_data = retrieve_all_data(tweets)
 	conn = conn.close()
 
 	return render_template(
 		'trends.html',
 		header='Trends',
 		subheader='Data',
-		data=data
+		data=[trends_data, trimmed_data, tweets_data]
 	)
 
 

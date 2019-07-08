@@ -25,16 +25,14 @@ auth.set_access_token(TWITTER_API_TOKEN, TWITTER_API_ACCESS)
 api = tweepy.API(auth)
 
 
-def tweepy_parser(filepath):
+def image_parser(trends):
     """
     Query Twitter to get MAX_TWEETS per trend in given metro region
-    :param filepath:
+    :param trends:
     :return list of tweets with images:
     """
-    metro_trend = pd.read_csv(filepath)
-    trends = metro_trend['name'].tolist()
 
-    MAX_TWEETS = 20
+    MAX_TWEETS = 25
 
     metadata_store = []
     tweets_with_images = []
