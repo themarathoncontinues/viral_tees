@@ -35,7 +35,7 @@ MONGO_SERVER = os.environ['MONGO_SERVER']
 MONGO_PORT = int(os.environ['MONGO_PORT'])
 MONGO_DATABASE = os.environ['MONGO_DATABASE']
 
-DATESTRFORMAT = "%Y_%m_%d_%H%M%S"
+DATESTRFORMAT = "%Y%m%d_%H%M%S"
 
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOG_FILE = LOG_DIR / datetime.now().strftime(f"vt_{DATESTRFORMAT}.log")
