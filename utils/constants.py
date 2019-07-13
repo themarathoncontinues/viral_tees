@@ -23,6 +23,7 @@ IMAGES_DIR = STATIC_DIR / 'images'
 SHIRTS_DIR = DATA_DIR / 'shirts'
 SHOPIFY_JSON = DATA_DIR / 'json'
 RESPONSE_JSON = DATA_DIR / 'response'
+TMP_DIR = DATA_DIR / 'tmp'
 
 
 ##### FILEPATHS
