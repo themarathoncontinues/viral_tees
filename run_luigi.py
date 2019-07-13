@@ -26,7 +26,8 @@ from utils.constants import \
     SHIRT_BG, \
     SHOPIFY_JSON, \
     RESPONSE_JSON, \
-    ENV_PATH
+    ENV_PATH, \
+    TMP_DIR
 
 
 load_dotenv(dotenv_path=ENV_PATH)
@@ -229,7 +230,7 @@ class OutputTwitterTasks(luigi.WrapperTask):
     date = luigi.DateMinuteParameter(default=datetime.now())
 
     def requires(self):
-        
+
         for loc in locations:
          yield StoreImageTweets(date=self.date, loc=loc)
 
@@ -259,55 +260,113 @@ class OutputTwitterTasks(luigi.WrapperTask):
 
 ##################################################
 
+
 class SaveImage(luigi.Task):
 
     date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+    tweet = luigi.DictParameter()
 
     def output(self):
 
-        return []
+        fname = f"{abs(hash(self.tweet['media_url']))}_{self.date.strftime(DATESTRFORMAT)}_{self.loc}.jpg"
+        fout = IMAGES_DIR / fname
+        os.makedirs(os.path.dirname(fout), exist_ok=True)
+        return luigi.LocalTarget(fout)
 
     def run(self):
-        import ipdb; ipdb.set_trace()
-        tweets = self.output().read()['tweets']
 
-        i = 0
-        for tw in tweets:
-            response = requests.get(tw['media_url']).content
-            self.trend = tw['trend']
-            self.user = tw['user']
-            fname = self.output().path
-            os.makedirs(os.path.dirname(fname), exist_ok=True)
-            f = open(fname, 'wb')
-            f.write(response)
-            f.close()
-            i += 1
-
-        vt_logging.info('Finished saving Twitter trends images.')
+        response = requests.get(self.tweet['media_url']).content
+        f = open(self.output().path, 'wb')
+        f.write(response)
+        f.close()
 
 
-# class SaveTrendImages(luigi.WrapperTask):
+class CropImage(luigi.Task):
+
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+    tweet = luigi.DictParameter()
+
+    def requires(self):
+
+        return SaveImage(loc=self.loc, date=self.date, tweet=self.tweet)
+
+    def output(self):
+
+        fname = f"cropped_{abs(hash(self.tweet['media_url']))}_{self.date.strftime(DATESTRFORMAT)}_{self.loc}.jpg"
+        fout = IMAGES_DIR / fname
+        os.makedirs(os.path.dirname(fout), exist_ok=True)
+        return luigi.LocalTarget(fout)
+
+    def run(self):
+        from utils.image_munge import run as munge
+
+        image = munge({'photopath': self.input().path})
+
+        f = open(self.output().path, 'wb')
+        cv2.imwrite(f.name, image)
+        f.close()
+
+class ParseImageTweets(luigi.Task):
+
+    date = luigi.DateMinuteParameter()
+    loc = luigi.Parameter()
+
+    def requires(self):
+        from models.mongo import connect_db, get_collection, find_by_id
+
+        client = connect_db()
+        col = get_collection(client, 'tweets', db=MONGO_DATABASE)
+        query = f"img_tweets_{self.date.strftime(DATESTRFORMAT)}_{self.loc}"
+        doc = find_by_id(col, query)
+        client = client.close()
+
+        for tw in doc['scope']['tweets']:
+            yield CropImage(loc=self.loc, date=self.date, tweet=tw)
+
+    def output(self):
+        from models.mongo import connect_db
+
+        name = f"images_{self.date.strftime(DATESTRFORMAT)}_{self.loc}"
+
+        return MongoCellTarget(
+            connect_db(MONGO_SERVER, MONGO_PORT),
+            MONGO_DATABASE,
+            'images',
+            name,
+            'scope'
+        )
+
+    def run(self):
+
+        images = []
+
+        for req in self.requires():
+            data = dict(req.tweet.get_wrapped())
+            data.update({
+                'img_path': req.output().path,
+                'crop_path': req.requires().output().path
+            })
+
+            images.append(data)
+
+        images = {'images': images, 'loc': self.loc, 'date': self.date}
+        self.output().write(images)
+
+
+class OutputImageTasks(luigi.WrapperTask):
     
-#     date = luigi.DateMinuteParameter(default=datetime.now())
+    date = luigi.DateMinuteParameter(default=datetime.now())
 
-#     def requires(self):
-#         yield OutputTwitterTasks(date=self.date)
+    def requires(self):
+        from models.mongo import connect_db, get_collection, find_by_id
 
-#         for OutputTwitterTasks.output 
-#             yield SaveImage(sdfahd)
-
-#     def output(self):
-
-#     def run(self):
-#         with open(prereq.output().path, 'r') as f: meta = json.load(f)
-            
-#         return [SaveImage(date=date, loc=loc, data=sumamry) for loc in locations]
-
-    # def run(self):
-    #     summary = self.input().path
-    #     with open(summary, 'r') as f: meta = json.load(f)
-
-
+        for loc in locations:
+            client = connect_db()
+            col = get_collection(client, 'tweets', MONGO_DATABASE)
+            client = client.close()
+            yield ParseImageTweets(loc=loc, date=self.date)
 
 
         # import ipdb; ipdb.set_trace()
@@ -438,32 +497,35 @@ class PostShopify(luigi.Task):
         f.close()
 
 
-class RunPipeline(luigi.WrapperTask):
+# class RunPipeline(luigi.WrapperTask):
 
-    date = luigi.DateMinuteParameter(default=datetime.now())
+#     date = luigi.DateMinuteParameter(default=datetime.now())
 
-    def requires(self):
+#     def requires(self):
     
-        yield OutputTwitterTasks(self.date)
-        yield OutputImageTasks(self.date)
+#         yield OutputTwitterTasks(self.date)
+#         yield OutputImageTasks(self.date)
 
-        return tasks
+#         return tasks
 
-    # def run(self):
-    #     log = self.output().open('w')
-    #     log.write('Ending viral tees log: {}'.format(self.date))
-    #     log.close()
+#     # def run(self):
+#     #     log = self.output().open('w')
+#     #     log.write('Ending viral tees log: {}'.format(self.date))
+#     #     log.close()
 
-    # def output(self):
-    #     fname = 'final_vt_{}.log'.format(self.date)
-    #     fout = LOG_DIR / fname
+#     # def output(self):
+#     #     fname = 'final_vt_{}.log'.format(self.date)
+#     #     fout = LOG_DIR / fname
 
-    #     return luigi.LocalTarget(fname)
+#     #     return luigi.LocalTarget(fname)
 
 
 if __name__ == '__main__':
     # import ipdb; ipdb.set_trace()
     # date = luigi.DateMinuteParameter(default=datetime.now())
-    # x = luigi.build([OutputTwitterTasks(date=datetime.now())], workers=3, detailed_summary=True)
+    date = datetime.now()
+
+    luigi.build([OutputTwitterTasks(date=date)], workers=4)
+    luigi.build([OutputImageTasks(date=date)], workers=1)
     # import ipdb; ipdb.set_trace()
-    luigi.run()
+    # luigi.run()
