@@ -124,4 +124,4 @@ if __name__ == "__main__":
 	# change the '0.0.0.0' to your IP address.
 	# this domain will allow you to see the site from any
 	# device connected to your network.
-	app.run(host=LOCAL, port=5000)
+        app.run(host="0.0.0.0", port=8080)
