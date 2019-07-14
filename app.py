@@ -74,7 +74,7 @@ def shop_delete():
 def image_data():
 	data = [x.relative_to(SRC_DIR) for x in IMAGES_DIR.iterdir()]
 	data = {x.name: str(x) for x in data}
-	
+
 	return render_template(
 		'images.html',
 		header='Images',

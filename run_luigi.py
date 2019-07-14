@@ -175,16 +175,22 @@ class StoreTrimTrendsData(luigi.Task):
         )
 
     def run(self):
+        from utils.cref_trends import generate_unique_trends
         data = self.requires().output().read()
 
         # manipulate data in some way
         data['trends'] = data['trends'][:5]
+        trend_lst = [d['name'] for d in data['trends']]
+
+        trends_out = generate_unique_trends(data)
 
         # we should save this down to disk also
         # need 2 targets
         data.update({
             'luigi_fp': 'trim_{}'.format(data['luigi_fp']),
-            'luigi_status': 'trimmed_trend'
+            'luigi_status': 'trimmed_trend',
+            'luigi_all_trend_list': trend_lst,
+            'luigi_unique_trend_list': trends_out
         })
 
         self.output().write(data)
@@ -215,7 +221,8 @@ class StoreImageTweets(luigi.Task):
         from utils.get_images import image_parser, sort_tweets_with_images
 
         data = self.requires().output().read()
-        trends = [x['name'] for x in data['trends']]
+        import ipdb; ipdb.set_trace()
+        trends = data['luigi_unique_trend_list']
 
         tweets = image_parser(trends)
         tweets = sort_tweets_with_images(tweets)
@@ -525,7 +532,7 @@ if __name__ == '__main__':
     # date = luigi.DateMinuteParameter(default=datetime.now())
     date = datetime.now()
 
-    luigi.build([OutputTwitterTasks(date=date)], workers=4)
+    luigi.build([OutputTwitterTasks(date=date)], workers=1)
     luigi.build([OutputImageTasks(date=date)], workers=1)
     # import ipdb; ipdb.set_trace()
-    # luigi.run()
+    luigi.run()
