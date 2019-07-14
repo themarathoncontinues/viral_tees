@@ -58,7 +58,6 @@ locations = [
     'usa-bos',
     'usa-sfo',
     'usa-det',
-    'usa-phx',
     'usa-sea',
 ]
 
@@ -179,7 +178,8 @@ class StoreTrimTrendsData(luigi.Task):
         data = self.requires().output().read()
 
         # manipulate data in some way
-        trend_lst = [d['name'] for d in data['trends'][:5]]
+        data['trends'] = data['trends'][:10]
+        trend_lst = [d['name'] for d in data['trends']]
 
         trends_out = generate_unique_trends(data)
 
@@ -530,7 +530,7 @@ if __name__ == '__main__':
     # date = luigi.DateMinuteParameter(default=datetime.now())
     date = datetime.now()
 
-    luigi.build([OutputTwitterTasks(date=date)], workers=1)
+    luigi.build([OutputTwitterTasks(date=date)], workers=4)
     luigi.build([OutputImageTasks(date=date)], workers=1)
     # import ipdb; ipdb.set_trace()
-    luigi.run()
+    # luigi.run()
