@@ -50,3 +50,7 @@ def find_by_id(col, idx):
 
 def find_by_luigi_at(col, dt):
 	return col.find({'scope.luigi_at': dt})
+
+
+def find_by_luigi_loc(col, loc):
+	return col.find({'scope.luigi_loc': loc})

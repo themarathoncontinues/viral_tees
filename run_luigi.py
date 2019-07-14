@@ -50,17 +50,17 @@ vt_logging.basicConfig(
 locations = [
     'usa-nyc',
     'usa-lax',
-    'usa-chi',
-    'usa-dal',
-    'usa-hou',
-    'usa-wdc',
-    'usa-mia',
-    'usa-phi',
-    'usa-atl',
-    'usa-bos',
-    'usa-sfo',
-    'usa-det',
-    'usa-sea',
+    # 'usa-chi',
+    # 'usa-dal',
+    # 'usa-hou',
+    # 'usa-wdc',
+    # 'usa-mia',
+    # 'usa-phi',
+    # 'usa-atl',
+    # 'usa-bos',
+    # 'usa-sfo',
+    # 'usa-det',
+    # 'usa-sea',
 ]
 
 
@@ -177,6 +177,7 @@ class StoreTrimTrendsData(luigi.Task):
 
     def run(self):
         from utils.cref_trends import generate_unique_trends
+
         data = self.requires().output().read()
 
         # manipulate data in some way
@@ -357,7 +358,7 @@ class ParseImageTweets(luigi.WrapperTask):
 
             images.append(data)
 
-        images = {'images': images, 'loc': self.loc, 'date': self.date}
+        images = {'images': images, 'luigi_loc': self.loc, 'luigi_at': self.date}
         self.output().write(images)
 
 ##################################################
@@ -367,12 +368,8 @@ class OutputImageTasks(luigi.WrapperTask):
     date = luigi.DateMinuteParameter(default=datetime.now())
 
     def requires(self):
-        from models.mongo import connect_db, get_collection, find_by_id
 
         for loc in locations:
-            client = connect_db()
-            col = get_collection(client, 'tweets', MONGO_DATABASE)
-            client = client.close()
             yield ParseImageTweets(loc=loc, date=self.date)
 
 
@@ -381,6 +378,21 @@ class OutputImageTasks(luigi.WrapperTask):
 ##################################################
 
 ##################################################
+
+
+class OutputShirtTasks(luigi.WrapperTask):
+
+    date = luigi.DateMinuteParameter(default=datetime.now())
+
+    def run(self):
+        from utils.image_choose import run as choose
+
+        associated_data = choose(self.date)
+
+        import ipdb; ipdb.set_trace()
+
+    def complete(self):
+        return False
 
 
 class ImageOverlay(luigi.Task):
@@ -511,30 +523,37 @@ class PostShopify(luigi.Task):
 def run(args_dict):
     date = datetime.now()
 
-    if args_dict['all'] and not args_dict['tweets']:
+    flow = args_dict['flow']
+    is_run_all = args_dict['all']
+
+    if flow is not None and is_run_all:
+        raise Exception('Passing too many arguments!')
+    elif flow is not None:
+        if 'tweets' in flow:
+            luigi.build([OutputTwitterTasks(date=date)], workers=4)
+        if 'images' in flow:
+            luigi.build([OutputImageTasks(date=date)], workers=1)
+        if 'shirts' in flow:
+            luigi.build([OutputShirtTasks(date=date)], workers=1)
+        if 'clean' in flow:
+            luigi.build([DeepClean()])
+    elif is_run_all and flow is None:
         luigi.build([OutputTwitterTasks(date=date)], workers=4)
         luigi.build([OutputImageTasks(date=date)], workers=1)
-    elif args_dict['all'] and args_dict['tweets']:
-        raise Exception('Must choose either all or tweets, not both.')
-    elif args_dict['tweets'] and not args_dict['all']:
-        luigi.build([OutputTwitterTasks(date=date)], workers=4)
-    elif args_dict['clean'] and not args_dict['all'] and not args_dict['tweets']:
-        luigi.build([DeepClean()])
+        luigi.build([OutputShirtTasks(date=date)], workers=1)
     else:
-        raise Exception('Passing way too many arguments!')
+        raise Exception('Something went wrong.')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Retrieve images from trimmed trends CSV.')
-    parser.add_argument('--all', action='store_true', 
-        default='--tweets' not in sys.argv and '--clean' not in sys.argv,
+    parser.add_argument('--all', action='store_true',
+        default='--flow' not in sys.argv and '--clean' not in sys.argv,
         help='Add this flag to run entire pipeline.')
-    parser.add_argument('--tweets', action='store_true',
-        default='--all' not in sys.argv and '--clean' not in sys.argv,
+    parser.add_argument('--flow', required=False, nargs='*',
+        choices=['tweets', 'images', 'shirts', 'clean'],
         help='Add this flag to run Twitter data.')
-    parser.add_argument('--clean', action='store_true',
-        default='--all' not in sys.argv and '--tweets' not in sys.argv,
-        help='Add this flag to clean all data.')
 
     args_dict = vars(parser.parse_args())
 
