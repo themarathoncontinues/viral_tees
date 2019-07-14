@@ -11,10 +11,11 @@
 {% block content %}
 
 <div class="card-columns">
-  {% for k, v in data.items() %}
+  {% for d in data %}
   <div class="card">
     <br>
-    <img class="card-img-top" src="{{ v }}" alt="Image">
+    <img class="card-img-top" src="{{ d[0] }}" alt="Image">
+    <img class="card-img-top" src="{{ d[1] }}" alt="Image">
     <div class="card-body">
       <p class="card-text"><small class="text-muted">{{ k }}</small></p>
     </div>

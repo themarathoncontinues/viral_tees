@@ -11,6 +11,7 @@
 
 {% block content %}
 
+
 <div id="accordion">
     {% for d in data %}
 
@@ -28,24 +29,30 @@
     <thead>
       <tr>
         <th scope="col" class="sort" data-sort="id">#</th>
+        <th scope="col" class="sort" data-sort="twid">Twitter ID</th>
         <th scope="col" class="sort" data-sort="date">Date</th>
         <th scope="col" class="sort" data-sort="loc">Location</th>
-        <th scope="col" class="sort" data-sort="name">Name</th>
-        <th scope="col" class="sort" data-sort="url">URL</th>
-        <th scope="col" class="sort" data-sort="vol">Volume</th>
+        <th scope="col" class="sort" data-sort="trend">Trend</th>
+        <th scope="col" class="sort" data-sort="url">Image URL</th>
+        <th scope="col" class="sort" data-sort="user">User</th>
+        <th scope="col" class="sort" data-sort="rts">Retweets</th>
+        <th scope="col" class="sort" data-sort="favs">Favorites</th>
       </tr>
     </thead>
     <tbody class="list">
+          {% for trend in d['scope']['tweets'] %}
 
-          {% for trend in d['scope']['trends'] %}
 
          <tr>
             <td scope="row" class="id"> {{ loop.index }} </th>
-            <td class="date"> {{ d['scope']['luigi_at'] }} </th>
-            <td class="loc"> {{ d['scope']['luigi_loc'] }} </th>
-            <td class="name"> {{ trend['name'] }} </th>
-            <td class="url"> {{ trend['url'] }} </th>
-            <td class="vol"> {{ trend['tweet_volume'] }} </td>
+            <td class="twid"> {{ trend['tweet_id'] }} </th>
+            <td class="date"> {{ d['scope']['date'] }} </th>
+            <td class="loc"> {{ d['scope']['loc'] }} </th>
+            <td class="trend"> {{ trend['trend'] }} </th>
+            <td class="url"><{{ trend['media_url'] }}</th>
+            <td class="user"> {{ trend['user'] }} </td>
+            <td class="rts"> {{ trend['retweet_count'] }} </td>
+            <td class="favs"> {{ trend['favorite_count'] }} </td>
          </tr>
                 {% endfor %}
 
