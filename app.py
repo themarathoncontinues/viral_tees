@@ -48,8 +48,6 @@ def tweet_data():
 	tweets_data = retrieve_all_data(tweets)
 	conn = conn.close()
 
-	import ipdb; ipdb.set_trace()
-
 	return render_template(
 		'tweets.html',
 		header='Tweets',
