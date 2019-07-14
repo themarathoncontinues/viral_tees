@@ -34,6 +34,8 @@ def image_parser(trends):
 
     MAX_TWEETS = 25
 
+    logger.info(f'Trends being queried: {trends}')
+
     metadata_store = []
     tweets_with_images = []
     for trend in trends:
@@ -86,7 +88,7 @@ def sort_tweets_with_images(tweets_with_images):
 
 
 def run(args_dict):
-    tweet_list = tweepy_parser(args_dict['input'])
+    tweet_list = image_parser(args_dict['input'])
     image_dicts = sort_tweets_with_images(tweet_list)
 
     return image_dicts

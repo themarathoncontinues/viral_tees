@@ -46,3 +46,7 @@ def retrieve_all_data(col, limit=3500):
 
 def find_by_id(col, idx):
 	return col.find_one({'_id': idx})
+
+
+def find_by_luigi_at(col, dt):
+	return col.find({'scope.luigi_at': dt})
