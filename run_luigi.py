@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import json
 import logging as vt_logging
@@ -6,6 +7,7 @@ import os
 import pandas as pd
 import requests
 import pickle
+import sys
 
 from datetime import datetime
 from dotenv import load_dotenv
@@ -374,9 +376,6 @@ class OutputImageTasks(luigi.WrapperTask):
             yield ParseImageTweets(loc=loc, date=self.date)
 
 
-        # import ipdb; ipdb.set_trace()
-
-
 class ImageOverlay(luigi.Task):
 
     date = luigi.DateMinuteParameter()
@@ -502,35 +501,34 @@ class PostShopify(luigi.Task):
         f.close()
 
 
-# class RunPipeline(luigi.WrapperTask):
-
-#     date = luigi.DateMinuteParameter(default=datetime.now())
-
-#     def requires(self):
-    
-#         yield OutputTwitterTasks(self.date)
-#         yield OutputImageTasks(self.date)
-
-#         return tasks
-
-#     # def run(self):
-#     #     log = self.output().open('w')
-#     #     log.write('Ending viral tees log: {}'.format(self.date))
-#     #     log.close()
-
-#     # def output(self):
-#     #     fname = 'final_vt_{}.log'.format(self.date)
-#     #     fout = LOG_DIR / fname
-
-#     #     return luigi.LocalTarget(fname)
-
-
-if __name__ == '__main__':
-    # import ipdb; ipdb.set_trace()
-    # date = luigi.DateMinuteParameter(default=datetime.now())
+def run(args_dict):
     date = datetime.now()
 
-    luigi.build([OutputTwitterTasks(date=date)], workers=4)
-    luigi.build([OutputImageTasks(date=date)], workers=1)
-    # import ipdb; ipdb.set_trace()
-    # luigi.run()
+    if args_dict['all'] and not args_dict['tweets']:
+        luigi.build([OutputTwitterTasks(date=date)], workers=4)
+        luigi.build([OutputImageTasks(date=date)], workers=1)
+    elif args_dict['all'] and args_dict['tweets']:
+        raise Exception('Must choose either all or tweets, not both.')
+    elif args_dict['tweets'] and not args_dict['all']:
+        luigi.build([OutputTwitterTasks(date=date)], workers=4)
+    elif args_dict['clean'] and not args_dict['all'] and not args_dict['tweets']:
+        luigi.build([DeepClean()])
+    else:
+        raise Exception('Passing way too many arguments!')
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Retrieve images from trimmed trends CSV.')
+    parser.add_argument('--all', action='store_true', 
+        default='--tweets' not in sys.argv and '--clean' not in sys.argv,
+        help='Add this flag to run entire pipeline.')
+    parser.add_argument('--tweets', action='store_true',
+        default='--all' not in sys.argv and '--clean' not in sys.argv,
+        help='Add this flag to run Twitter data.')
+    parser.add_argument('--clean', action='store_true',
+        default='--all' not in sys.argv and '--tweets' not in sys.argv,
+        help='Add this flag to clean all data.')
+
+    args_dict = vars(parser.parse_args())
+
+    run(args_dict)
