@@ -1,3 +1,4 @@
+import itertools
 import os
 
 from dotenv import load_dotenv
@@ -30,20 +31,29 @@ def index():
 def trend_data():
 	conn = connect_db()
 	trends = get_collection(conn, 'trends')
-	trimmed = get_collection(conn, 'trimmed')
-	tweets = get_collection(conn, 'tweets')
 	trends_data = retrieve_all_data(trends)
-	trimmed_data = retrieve_all_data(trimmed)
-	tweets_data = retrieve_all_data(tweets)
 	conn = conn.close()
 
 	return render_template(
 		'trends.html',
 		header='Trends',
 		subheader='Data',
-		data=[trends_data, trimmed_data, tweets_data]
+		data=trends_data
 	)
 
+@app.route('/tweets-view')
+def tweet_data():
+	conn = connect_db()
+	tweets = get_collection(conn, 'tweets')
+	tweets_data = retrieve_all_data(tweets)
+	conn = conn.close()
+
+	return render_template(
+		'tweets.html',
+		header='Tweets',
+		subheader='Data',
+		data=tweets_data
+	)
 
 @app.route('/shopify-view')
 def shop_data():
@@ -72,13 +82,22 @@ def shop_delete():
 
 @app.route('/images-view')
 def image_data():
-	data = [x.relative_to(SRC_DIR) for x in IMAGES_DIR.iterdir()]
-	data = {x.name: str(x) for x in data}
+	data = [str(x.relative_to(SRC_DIR)) for x in IMAGES_DIR.iterdir()]
+
+	final = []
+	for check_item in data:
+		check = check_item.split('_')[-4]
+		for search in data:
+			if check in search and check_item != search:
+				pair = (check_item, search)
+				final.append(pair)
+			else:
+				pass
 
 	return render_template(
 		'images.html',
 		header='Images',
-		data=data
+		data=final
 	)
 
 
