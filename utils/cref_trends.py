@@ -1,4 +1,3 @@
-import luigi.contrib.mongodb
 import os
 from dotenv import load_dotenv
 from models.mongo import connect_db, get_collection, retrieve_all_data, find_by_luigi_at
