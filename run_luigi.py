@@ -549,11 +549,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Retrieve images from trimmed trends CSV.')
     parser.add_argument('--all', action='store_true',
-        default='--flow' not in sys.argv and '--clean' not in sys.argv,
+        default='--flow' not in sys.argv,
         help='Add this flag to run entire pipeline.')
     parser.add_argument('--flow', required=False, nargs='*',
         choices=['tweets', 'images', 'shirts', 'clean'],
-        help='Add this flag to run Twitter data.')
+        help='Add this flag to choose which flow to run.')
 
     args_dict = vars(parser.parse_args())
 
