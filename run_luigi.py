@@ -267,7 +267,6 @@ class OutputTwitterTasks(luigi.WrapperTask):
 
 ##################################################
 
-
 class SaveImage(luigi.Task):
 
     date = luigi.DateMinuteParameter()
@@ -315,7 +314,7 @@ class CropImage(luigi.Task):
         cv2.imwrite(f.name, image)
         f.close()
 
-class ParseImageTweets(luigi.Task):
+class ParseImageTweets(luigi.WrapperTask):
 
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
@@ -361,6 +360,7 @@ class ParseImageTweets(luigi.Task):
         images = {'images': images, 'loc': self.loc, 'date': self.date}
         self.output().write(images)
 
+##################################################
 
 class OutputImageTasks(luigi.WrapperTask):
     
@@ -374,6 +374,13 @@ class OutputImageTasks(luigi.WrapperTask):
             col = get_collection(client, 'tweets', MONGO_DATABASE)
             client = client.close()
             yield ParseImageTweets(loc=loc, date=self.date)
+
+
+##################################################
+
+##################################################
+
+##################################################
 
 
 class ImageOverlay(luigi.Task):
