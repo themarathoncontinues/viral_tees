@@ -69,5 +69,6 @@ def run(date):
     associated = {}
     for loc in locations:
         chunk = associate(loc, data['trends'], data['trimmed'], data['images'])
+        associated.update(chunk)
 
     return associated
