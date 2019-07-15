@@ -30,7 +30,7 @@ FACEBOOK_BUSINESS_ID="{facebook-api}"
 FACEBOOK_PAGE_ID="{facebook-api}"
 FACEBOOK_PIXEL_ID="{facebook-api}"
 
-MONGO_SERVER="{server}""
+MONGO_SERVER="{server}"
 MONGO_PORT="{port}"
 MONGO_DATABASE="{database}"
 ```
@@ -90,7 +90,7 @@ Using data stored in mongo, develop a set of data in order to post shirts to Sho
 
 12) `PostShopify`
 
-From the data generated in `GenerateData` and the image shirt produced in `ImageOverlay` post a product to Shopify
+From the data generated in `GenerateData` and the shirt produced in `ImageOverlay` post a product to Shopify
 
 13) `OutputTwitterTasks`
 
