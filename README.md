@@ -17,6 +17,7 @@ Viral-Tees is a service that aims to catch the most trending topics and offer li
 
 ```bash
 SHOPIFY_API="{shopify-api}"
+
 TWITTER_API_KEY="{twitter-api}"
 TWITTER_API_SECRET="{twitter-api}"
 TWITTER_API_TOKEN="{twitter-api}"
