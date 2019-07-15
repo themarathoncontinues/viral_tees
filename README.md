@@ -38,8 +38,8 @@ MONGO_DATABASE="{database}"
 4) Open 4 terminals:
 - `luigid`
 - `mongod --port=$MONGO_PORT`
-- `python run_luigi.py --all`
 - `python app.py`
+- `python run_luigi.py --all`
 
 ## Tasks
 
@@ -101,6 +101,15 @@ Dependency Graph
 
 Dependency Graph
 ![Screen Shot](https://imgur.com/J9cwsnk.png)
+
+15) `OutputShirtTasks`
+
+Wrapper task for developing shirts
+
+16) `OutputShopifyTasks`
+
+Wrapper task for pushing shirts to Shopify
+
 
 
 ### References
