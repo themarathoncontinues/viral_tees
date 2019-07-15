@@ -402,16 +402,9 @@ class ImageOverlay(luigi.Task):
     def run(self):
         from utils.image_overlay import run as image_overlay
 
-        meta = dict(self.data.get_wrapped())
-
-        # clean FrozenDict
-        trend = dict(meta['trend'].get_wrapped())
-        tweet = dict(meta['tweet'].get_wrapped())
-
-        meta.update({'trend': trend, 'tweet': tweet})
-
         args_dict = {
-            'image': meta['tweet']['crop_path'],
+            'image': self.data['tweet']['crop_path'],
+            'name': self.data['trend'].get('name'),
             'background': str(SHIRT_BG.absolute()),
             'output': self.output().path
         }

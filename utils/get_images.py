@@ -50,12 +50,14 @@ def image_parser(trends):
 
             user = model['user']['screen_name']
             tweet_id = model['id_str']
+            tweet_content = model['text']
             follower_count = model['user']['followers_count']
             retweet_count = model['retweet_count']
             favorte_count = model['favorite_count']
 
             tweet_metadata = {
                 'user': user,
+                'tweet_content': tweet_content,
                 'tweet_id': tweet_id,
                 'trend': trend,
                 'follower_count': follower_count,
