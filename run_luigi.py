@@ -50,17 +50,17 @@ vt_logging.basicConfig(
 locations = [
     'usa-nyc',
     'usa-lax',
-    # 'usa-chi',
-    # 'usa-dal',
-    # 'usa-hou',
-    # 'usa-wdc',
-    # 'usa-mia',
-    # 'usa-phi',
-    # 'usa-atl',
-    # 'usa-bos',
-    # 'usa-sfo',
-    # 'usa-det',
-    # 'usa-sea',
+    'usa-chi',
+    'usa-dal',
+    'usa-hou',
+    'usa-wdc',
+    'usa-mia',
+    'usa-phi',
+    'usa-atl',
+    'usa-bos',
+    'usa-sfo',
+    'usa-det',
+    'usa-sea',
 ]
 
 
@@ -366,6 +366,7 @@ class ParseImageTweets(luigi.WrapperTask):
 
         images = {'images': images, 'luigi_loc': self.loc, 'luigi_at': self.date}
         self.output().write(images)
+
 
 ##################################################
 

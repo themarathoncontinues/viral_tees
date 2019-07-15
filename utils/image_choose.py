@@ -26,9 +26,6 @@ def retrieve(date):
 
     conn = conn.close()
 
-    # make sure all data is even
-    assert len(trends) == len(trimmed) == len(images), 'Data lengths do not match.'
-
     return {
         'trends': trends,
         'trimmed': trimmed,
@@ -42,9 +39,10 @@ def get_locations(trends, trimmed, images):
     image_locs = [x['scope']['luigi_loc'] for x in images]
 
     # make sure all locations are the same
-    assert trend_locs == trimmed_locs == image_locs, 'Data locations do not match.'
+    lst = [trend_locs, trimmed_locs, image_locs]
+    locs = set(lst[0]).intersection(*lst[:1]) 
 
-    return image_locs
+    return locs
 
 
 def associate(loc, trends, trimmed, images):
@@ -69,34 +67,40 @@ def decide(loc, date, data):
     Currently using "most retweeted image" and "highest volume" model.
     '''
 
-    # munging tweets
-    most_retweets = max(
-        [x for x in data['images'][0]['scope']['images']],
-        key=lambda x: x['retweet_count']
-    )
-    most_favorites = max(
-        [x for x in data['images'][0]['scope']['images']],
-        key=lambda x: x['favorite_count']
-    )
-    most_followers = max(
-        [x for x in data['images'][0]['scope']['images']],
-        key=lambda x: x['follower_count']
-    )
-
-    # munging trends
-    highest_vol = max(
-        [x for x in data['trends'][0]['scope']['trends']
-            if x['tweet_volume'] is not None],
-        key=lambda x: x['tweet_volume']
-    )
-
     # build metadata
     meta = {}
-    if highest_vol['name'] == most_retweets['trend']:
-        meta['luigi_loc'] = loc
-        meta['luigi_at'] = date.strftime("%Y%m%d_%H%M%S")
-        meta['trend'] = highest_vol
-        meta['tweet'] = most_retweets
+
+    try:
+        # munging tweets
+        most_retweets = max(
+            [x for x in data['images'][0]['scope']['images']],
+            key=lambda x: x['retweet_count']
+        )
+        most_favorites = max(
+            [x for x in data['images'][0]['scope']['images']],
+            key=lambda x: x['favorite_count']
+        )
+        most_followers = max(
+            [x for x in data['images'][0]['scope']['images']],
+            key=lambda x: x['follower_count']
+        )
+
+        # munging trends
+        highest_vol = max(
+            [x for x in data['trends'][0]['scope']['trends']
+                if x['tweet_volume'] is not None],
+            key=lambda x: x['tweet_volume']
+        )
+
+        if highest_vol['name'] == most_retweets['trend']:
+            meta['luigi_loc'] = loc
+            meta['luigi_at'] = date.strftime("%Y%m%d_%H%M%S")
+            meta['trend'] = highest_vol
+            meta['tweet'] = most_retweets
+
+    except IndexError:
+        # there is nothing to perform on
+        pass
 
     return meta
 
