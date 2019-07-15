@@ -66,6 +66,7 @@ locations = [
 
 ####### UTILITY TASKS
 
+
 class DeepClean(ExternalProgramTask):
 
     def program_args(self):
@@ -73,6 +74,7 @@ class DeepClean(ExternalProgramTask):
         return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
 
 ####### PIPELINE
+
 
 class StartLogging(luigi.Task):
 
@@ -92,6 +94,7 @@ class StartLogging(luigi.Task):
         return luigi.LocalTarget(fout)
 
 ##################################################
+
 
 class QueryTwitterTrends(luigi.Task):
 
@@ -181,7 +184,7 @@ class StoreTrimTrendsData(luigi.Task):
         data = self.requires().output().read()
 
         # manipulate data in some way
-        data['trends'] = data['trends'][:10]
+        data['trends'] = data['trends'][:5]
         trend_lst = [d['name'] for d in data['trends']]
 
         trends_out = generate_unique_trends(data)
@@ -233,6 +236,7 @@ class StoreImageTweets(luigi.Task):
 
 ##################################################
 
+
 class OutputTwitterTasks(luigi.WrapperTask):
 
     date = luigi.DateMinuteParameter(default=datetime.now())
@@ -267,6 +271,7 @@ class OutputTwitterTasks(luigi.WrapperTask):
 ##################################################
 
 ##################################################
+
 
 class SaveImage(luigi.Task):
 
@@ -314,6 +319,7 @@ class CropImage(luigi.Task):
         f = open(self.output().path, 'wb')
         cv2.imwrite(f.name, image)
         f.close()
+
 
 class ParseImageTweets(luigi.WrapperTask):
 
@@ -538,7 +544,7 @@ def run(args_dict):
         if 'clean' in flow:
             luigi.build([DeepClean()])
     elif is_run_all and flow is None:
-        luigi.build([OutputTwitterTasks(date=date)], workers=4)
+        luigi.build([OutputTwitterTasks(date=date)], workers=1)
         luigi.build([OutputImageTasks(date=date)], workers=1)
         luigi.build([OutputShirtTasks(date=date)], workers=1)
     else:

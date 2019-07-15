@@ -82,7 +82,7 @@ def shop_delete():
 
 @app.route('/images-view')
 def image_data():
-	data = [str(x.relative_to(SRC_DIR)) for x in IMAGES_DIR.iterdir()]
+	data = [str(x.relative_to(SRC_DIR)) for x in IMAGES_DIR.iterdir() if not '.DS_Store' in str(x)]
 
 	final = []
 	for check_item in data:
@@ -97,7 +97,7 @@ def image_data():
 	return render_template(
 		'images.html',
 		header='Images',
-		data=final
+		data=list(set([tuple(sorted(t)) for t in final]))
 	)
 
 
