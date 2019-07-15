@@ -61,6 +61,46 @@ def associate(loc, trends, trimmed, images):
         }
     }
 
+
+def decide(loc, date, data):
+    '''
+    This is where shirt output decision is being made.
+
+    Currently using "most retweeted image" and "highest volume" model.
+    '''
+
+    # munging tweets
+    most_retweets = max(
+        [x for x in data['images'][0]['scope']['images']],
+        key=lambda x: x['retweet_count']
+    )
+    most_favorites = max(
+        [x for x in data['images'][0]['scope']['images']],
+        key=lambda x: x['favorite_count']
+    )
+    most_followers = max(
+        [x for x in data['images'][0]['scope']['images']],
+        key=lambda x: x['follower_count']
+    )
+
+    # munging trends
+    highest_vol = max(
+        [x for x in data['trends'][0]['scope']['trends']
+            if x['tweet_volume'] is not None],
+        key=lambda x: x['tweet_volume']
+    )
+
+    # build metadata
+    meta = {}
+    if highest_vol['name'] == most_retweets['trend']:
+        meta['luigi_loc'] = loc
+        meta['luigi_at'] = date.strftime("%Y%m%d_%H%M%S")
+        meta['trend'] = highest_vol
+        meta['tweet'] = most_retweets
+
+    return meta
+
+
 def run(date):
 
     data = retrieve(date)
@@ -71,4 +111,12 @@ def run(date):
         chunk = associate(loc, data['trends'], data['trimmed'], data['images'])
         associated.update(chunk)
 
-    return associated
+    chosen = []
+    for loc in associated.keys():
+        choice = decide(loc, date, associated[loc])
+        if not choice:
+            pass
+        else:
+            chosen.append(choice)
+
+    return chosen
