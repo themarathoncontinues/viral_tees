@@ -425,6 +425,47 @@ class ImageOverlay(luigi.Task):
         vt_logging.info('T-Shirt generated.')
 
 
+class GenerateShirtData(luigi.Task):
+
+    data = luigi.DictParameter()
+    date = luigi.DateMinuteParameter()
+
+    def requires(self):
+        return ImageOverlay(data=self.data)
+
+    def output(self):
+        from models.mongo import connect_db
+
+        name = f"shirt_{self.date.strftime(DATESTRFORMAT)}_{self.data['luigi_loc']}"
+
+        return MongoCellTarget(
+            connect_db(MONGO_SERVER, MONGO_PORT),
+            MONGO_DATABASE,
+            'shirts',
+            name,
+            'scope'
+        )
+
+    def run(self):
+        
+        meta = self.requires().param_kwargs['data']
+        stamp = datetime.strptime(meta.get('luigi_at'), DATESTRFORMAT)
+
+        meta = {
+            'luigi_loc': meta.get('luigi_loc'),
+            'luigi_at': stamp,
+            'trend': meta.get('trend').get('name'),
+            'volume': meta.get('trend').get('volume'),
+            'tweet_id': meta.get('tweet').get('tweet_id'),
+            'og_img': meta.get('tweet').get('img_path'),
+            'crop_img': meta.get('tweet').get('cropped_path'),
+            'shirt_img': self.requires().output().path,
+            'price': 25
+        }
+
+        self.output().write(meta)
+
+
 class OutputShirtTasks(luigi.WrapperTask):
 
     date = luigi.DateMinuteParameter(default=datetime.now())
@@ -439,72 +480,23 @@ class OutputShirtTasks(luigi.WrapperTask):
             self.done = True
         else:
             for choice in chosen_data:
-                yield ImageOverlay(data=choice)
+                yield GenerateShirtData(data=choice, date=self.date)
 
     def complete(self):
         return self.done
 
 
-class GenerateData(luigi.Task):
-
-    date = luigi.DateMinuteParameter()
-    loc = luigi.Parameter()
-
-    def requires(self):
-        return [ImageOverlay(date=self.date, loc=self.loc)]
-
-    def run(self):
-        image_fp = self.requires()[0].output().path
-        title = image_fp.split('/')[-1].split('_')[1]
-        
-        og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
-        df = pd.read_csv(og_d)
-        df = df[df['name'] == title]
-
-        tweet_volume = df['tweet_volume'][0]
-        tweet_url = df['url'][0]
-
-        opath = og_d.split('/')[-1].replace('csv', 'json')
-        out = SHOPIFY_JSON / opath
-        fout = str(out.absolute()).replace('trimmed_', '')
-
-        meta_dict = {
-            'og': og_d,
-            'tweet_volume': str(tweet_volume),
-            'tweet_url': tweet_url,
-            'img': image_fp,
-            'title': title,
-            'load': fout
-        }
-
-        f = open(self.output().path, 'w')
-        json.dump(meta_dict, f, indent=4)
-        f.close()
-        vt_logging.info('JSON data generated.')
-
-
-    def output(self):
-        og_d = TrimTrendsData(date=self.date, loc=self.loc).output().path
-        opath = og_d.split('/')[-1].replace('csv', 'json')
-        out = SHOPIFY_JSON / opath
-        fout = str(out.absolute()).replace('trimmed_', '')
-        os.makedirs(os.path.dirname(fout), exist_ok=True)
-
-        return luigi.LocalTarget(fout)
-
-
 class PostShopify(luigi.Task):
 
-    date = luigi.DateMinuteParameter()
-    loc = luigi.Parameter()
-
-    def requires(self):
-        return[GenerateData(date=self.date, loc=self.loc)]
+    shirt = luigi.DictParameter()
 
     def output(self):
-        fout = '{}.json'.format(
-            Path(self.requires()[0].output().path).stem
-        )
+
+        idx = self.shirt.get('_id')
+        name = idx.replace('shirt', 'shopify')
+
+        # this needs to go to Mongo in next version
+        fout = f'{name}.json'
         fout = RESPONSE_JSON / fout
         os.makedirs(os.path.dirname(fout), exist_ok=True)
         return luigi.LocalTarget(str(fout.absolute()))
@@ -512,19 +504,47 @@ class PostShopify(luigi.Task):
     def run(self):
         from utils.post_shopify import create_product, post_image
 
-        dfp = self.requires()[0].output().path
-        with open(dfp) as f:
-            data = json.load(f)
+        meta = self.shirt.get('scope')
+
+        info = {
+            'id': self.shirt.get('_id'),
+            'luigi_loc': meta.get('luigi_loc'),
+            'luigi_at': meta.get('luigi_at'),
+            'trend': meta.get('trend'),
+            'volume': meta.get('volume'),
+            'tweet_id': meta.get('tweet_id'),
+            'price': 25
+        }
+
+        description = '''
+            id: {} <br>
+            location: {} <br>
+            time: {} <br>
+            trend: {} <br>
+            volume: {} <br>
+            tweet_id: {} <br>
+        '''.format(
+            info['id'],
+            info['luigi_loc'],
+            info['luigi_at'],
+            info['trend'],
+            info['volume'],
+            info['tweet_id'],
+        )
 
         input_dict = {
-            'title': data['title'],
-            'body_html': 'Volume: {}'.format(data['tweet_volume']),
+            'title': info['id'],
+            'body_html': description,
+            'variants': [{
+                'title': info['trend'],
+                'price': info['price']
+            }]
         }
 
         response = create_product(input_dict)
 
         img_dict = {
-            'img': data['img']
+            'img': meta.get('shirt_img')
         }
 
         img_response = post_image(img_dict, response)
@@ -533,6 +553,27 @@ class PostShopify(luigi.Task):
         f = open(self.output().path, 'w')
         json.dump(r_dict, f, indent=4)
         f.close()
+
+
+class OutputShopifyTasks(luigi.WrapperTask):
+
+    date = luigi.DateMinuteParameter(default=datetime.now())
+    done = False
+
+    def requires(self):
+        from models.mongo import connect_db, find_by_luigi_at
+
+        conn = connect_db()
+        db = conn[MONGO_DATABASE]
+        col = db['shirts']
+
+        data = find_by_luigi_at(col, self.date)
+
+        for shirt in data:
+            # datetime is not JSON serializable
+            shirt['scope']['luigi_at'] = shirt['scope']['luigi_at'].strftime(DATESTRFORMAT)
+
+            yield PostShopify(shirt=shirt)
 
 
 def run(args_dict):
@@ -550,12 +591,15 @@ def run(args_dict):
             luigi.build([OutputImageTasks(date=date)], workers=1)
         if 'shirts' in flow:
             luigi.build([OutputShirtTasks(date=date)], workers=1)
+        if 'shopify' in flow:
+            luigi.build([OutputShopifyTasks(date=date)], workers=1)
         if 'clean' in flow:
             luigi.build([DeepClean()])
     elif is_run_all and flow is None:
         luigi.build([OutputTwitterTasks(date=date)], workers=4)
         luigi.build([OutputImageTasks(date=date)], workers=1)
         luigi.build([OutputShirtTasks(date=date)], workers=1)
+        luigi.build([OutputShopifyTasks(date=date)], workers=1)
     else:
         raise Exception('Something went wrong.')
 
@@ -567,7 +611,7 @@ if __name__ == '__main__':
         default='--flow' not in sys.argv,
         help='Add this flag to run entire pipeline.')
     parser.add_argument('--flow', required=False, nargs='*',
-        choices=['tweets', 'images', 'shirts', 'clean'],
+        choices=['tweets', 'images', 'shirts', 'shopify', 'clean'],
         help='Add this flag to choose which flow to run.')
 
     args_dict = vars(parser.parse_args())
