@@ -438,41 +438,6 @@ class OutputShirtTasks(luigi.WrapperTask):
         return self.done
 
 
-# class ImageOverlay(luigi.Task):
-
-#     date = luigi.DateMinuteParameter()
-#     loc = luigi.Parameter()
-#     args_dict = {'image': '', 'background': '', 'output': ''}
-
-#     def requires(self):
-#         return [SaveImages(date=self.date, loc=self.loc)]
-
-#     def output(self):
-#         fname = 'shirt_{}'.format(self.args_dict['image'].split('/')[-1])
-#         fout = SHIRTS_DIR / fname
-
-#         return luigi.LocalTarget(fout)
-
-#     def run(self):
-#         from utils.image_overlay import run as image_overlay
-
-#         args_dict = {
-#             'image': self.requires()[0].output().path,
-#             'background': str(SHIRT_BG.absolute()),
-#             'output': self.output().path
-#         }
-#         self.args_dict = args_dict
-
-#         img = image_overlay(args_dict)
-
-#         fname = self.output().path
-#         os.makedirs(os.path.dirname(fname), exist_ok=True)
-#         f = open(fname, 'wb')
-#         cv2.imwrite(f.name, img)
-#         f.close()
-#         vt_logging.info('T-Shirt generated.')
-
-
 class GenerateData(luigi.Task):
 
     date = luigi.DateMinuteParameter()
