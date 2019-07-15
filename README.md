@@ -74,7 +74,7 @@ Saves images from filtered trends data.
 
 8) `CropImage`
 
-Cropping images based based on a cv2 KeyPoints heuristic
+Cropping images based on a cv2 KeyPoints heuristic
 
 9) `ParseImageTweets`
 
@@ -84,7 +84,7 @@ Parse out images in order to host on backend via Flask
 
 Overlay cropped images onto background shirt image along with text outlining the trend and date
 
-11) `GenerateData`
+11) `GenerateShirtData`
 
 Using data stored in mongo, develop a set of data in order to post shirts to Shopify
 
