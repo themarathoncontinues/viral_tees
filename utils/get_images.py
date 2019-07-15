@@ -32,7 +32,7 @@ def image_parser(trends):
     :return list of tweets with images:
     """
 
-    MAX_TWEETS = 25
+    MAX_TWEETS = 35
 
     logger.info(f'Trends being queried: {trends}')
 
