@@ -66,8 +66,8 @@ def crop_images(m_tp, fp, aratio):
 
     img = cv2.imread(fp)
     output_image = img[i:i+ver, :]
-    insert_name = fp.split('/')[-1].replace('.jpg','')
-    cv2.imwrite(f'data/{insert_name}_cropped.jpg', output_image)
+    # insert_name = fp.split('/')[-1].replace('.jpg','')
+    # cv2.imwrite(f'data/{insert_name}_cropped.jpg', output_image)
 
     return output_image
 
