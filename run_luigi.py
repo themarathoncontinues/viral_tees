@@ -352,8 +352,8 @@ class ParseImageTweets(luigi.WrapperTask):
         for req in self.requires():
             data = dict(req.tweet.get_wrapped())
             data.update({
-                'img_path': req.output().path,
-                'crop_path': req.requires().output().path
+                'img_path': req.requires().output().path,
+                'crop_path': req.output().path
             })
 
             images.append(data)
@@ -379,55 +379,98 @@ class OutputImageTasks(luigi.WrapperTask):
 
 ##################################################
 
-
-class OutputShirtTasks(luigi.WrapperTask):
-
-    date = luigi.DateMinuteParameter(default=datetime.now())
-
-    def run(self):
-        from utils.image_choose import run as choose
-
-        associated_data = choose(self.date)
-
-        import ipdb; ipdb.set_trace()
-
-    def complete(self):
-        return False
-
-
 class ImageOverlay(luigi.Task):
 
-    date = luigi.DateMinuteParameter()
-    loc = luigi.Parameter()
-    args_dict = {'image': '', 'background': '', 'output': ''}
-
-    def requires(self):
-        return [SaveImages(date=self.date, loc=self.loc)]
+    data = luigi.DictParameter()
 
     def output(self):
-        fname = 'shirt_{}'.format(self.args_dict['image'].split('/')[-1])
-        fout = SHIRTS_DIR / fname
+        meta = dict(self.data.get_wrapped())
+
+        fname = f"shirt_{self.data['luigi_at']}_{self.data['luigi_loc']}.jpg"
+        fout = IMAGES_DIR / fname
+        os.makedirs(os.path.dirname(fout), exist_ok=True)
 
         return luigi.LocalTarget(fout)
 
     def run(self):
         from utils.image_overlay import run as image_overlay
 
+        meta = dict(self.data.get_wrapped())
+
+        # clean FrozenDict
+        trend = dict(meta['trend'].get_wrapped())
+        tweet = dict(meta['tweet'].get_wrapped())
+
+        meta.update({'trend': trend, 'tweet': tweet})
+
         args_dict = {
-            'image': self.requires()[0].output().path,
+            'image': meta['tweet']['crop_path'],
             'background': str(SHIRT_BG.absolute()),
             'output': self.output().path
         }
-        self.args_dict = args_dict
 
         img = image_overlay(args_dict)
 
         fname = self.output().path
-        os.makedirs(os.path.dirname(fname), exist_ok=True)
         f = open(fname, 'wb')
         cv2.imwrite(f.name, img)
         f.close()
         vt_logging.info('T-Shirt generated.')
+
+
+class OutputShirtTasks(luigi.WrapperTask):
+
+    date = luigi.DateMinuteParameter(default=datetime.now())
+    done = False
+
+    def requires(self):
+        from utils.image_choose import run as choose
+
+        chosen_data = choose(self.date)
+
+        if len(chosen_data) == 0:
+            self.done = True
+        else:
+            for choice in chosen_data:
+                yield ImageOverlay(data=choice)
+
+    def complete(self):
+        return self.done
+
+
+# class ImageOverlay(luigi.Task):
+
+#     date = luigi.DateMinuteParameter()
+#     loc = luigi.Parameter()
+#     args_dict = {'image': '', 'background': '', 'output': ''}
+
+#     def requires(self):
+#         return [SaveImages(date=self.date, loc=self.loc)]
+
+#     def output(self):
+#         fname = 'shirt_{}'.format(self.args_dict['image'].split('/')[-1])
+#         fout = SHIRTS_DIR / fname
+
+#         return luigi.LocalTarget(fout)
+
+#     def run(self):
+#         from utils.image_overlay import run as image_overlay
+
+#         args_dict = {
+#             'image': self.requires()[0].output().path,
+#             'background': str(SHIRT_BG.absolute()),
+#             'output': self.output().path
+#         }
+#         self.args_dict = args_dict
+
+#         img = image_overlay(args_dict)
+
+#         fname = self.output().path
+#         os.makedirs(os.path.dirname(fname), exist_ok=True)
+#         f = open(fname, 'wb')
+#         cv2.imwrite(f.name, img)
+#         f.close()
+#         vt_logging.info('T-Shirt generated.')
 
 
 class GenerateData(luigi.Task):
