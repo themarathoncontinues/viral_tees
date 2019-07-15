@@ -84,7 +84,7 @@ Parse out images in order to host on backend via Flask
 
 Overlay cropped images onto background shirt image along with text outlining the trend and date
 
-11) 'GenerateData'
+11) `GenerateData`
 
 Using data stored in mongo, develop a set of data in order to post shirts to Shopify
 
