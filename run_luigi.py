@@ -66,6 +66,7 @@ locations = [
 
 ####### UTILITY TASKS
 
+
 class DeepClean(ExternalProgramTask):
 
     def program_args(self):
@@ -73,6 +74,7 @@ class DeepClean(ExternalProgramTask):
         return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
 
 ####### PIPELINE
+
 
 class StartLogging(luigi.Task):
 
@@ -92,6 +94,7 @@ class StartLogging(luigi.Task):
         return luigi.LocalTarget(fout)
 
 ##################################################
+
 
 class QueryTwitterTrends(luigi.Task):
 
@@ -233,6 +236,7 @@ class StoreImageTweets(luigi.Task):
 
 ##################################################
 
+
 class OutputTwitterTasks(luigi.WrapperTask):
 
     date = luigi.DateMinuteParameter(default=datetime.now())
@@ -267,6 +271,7 @@ class OutputTwitterTasks(luigi.WrapperTask):
 ##################################################
 
 ##################################################
+
 
 class SaveImage(luigi.Task):
 
@@ -314,6 +319,7 @@ class CropImage(luigi.Task):
         f = open(self.output().path, 'wb')
         cv2.imwrite(f.name, image)
         f.close()
+
 
 class ParseImageTweets(luigi.WrapperTask):
 

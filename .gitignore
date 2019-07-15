@@ -21,4 +21,5 @@ final_vt*
 
 .ipynb_checkpoints
 mongo_to_df.ipynb
+mongo_data_munging.ipynb
 static/images
