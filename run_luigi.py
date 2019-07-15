@@ -184,7 +184,7 @@ class StoreTrimTrendsData(luigi.Task):
         data = self.requires().output().read()
 
         # manipulate data in some way
-        data['trends'] = data['trends'][:10]
+        data['trends'] = data['trends'][:7]
         trend_lst = [d['name'] for d in data['trends']]
 
         trends_out = generate_unique_trends(data)

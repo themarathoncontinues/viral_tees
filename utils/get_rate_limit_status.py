@@ -1,6 +1,8 @@
 import os
+import time
 import tweepy
 
+from datetime import datetime
 from dotenv import load_dotenv
 from utils.constants import ENV_PATH
 
@@ -18,3 +20,12 @@ api = tweepy.API(auth)
 
 print(api.rate_limit_status()['resources']['search']['/search/tweets'])
 print(api.rate_limit_status()['resources']['trends']['/trends/place'])
+
+epoch = api.rate_limit_status()['resources']['search']['/search/tweets'].get('reset')
+epoch_str = time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(epoch))
+epoch_dt = datetime.strptime(epoch_str, '%a, %d %b %Y %H:%M:%S %Z')
+time_to_reset = epoch_dt - datetime.now()
+seconds = time_to_reset.seconds
+mintues = (seconds % 3600) // 60
+seconds = (seconds % 60)
+print(f'Requests reset in: {mintues} min {seconds} sec')
