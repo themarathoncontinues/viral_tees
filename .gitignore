@@ -1,16 +1,25 @@
+# IDE
 .idea/
+
+# (dot)ENV
 .env
 __pycache__/
+
+# env
 venv/
 env/
-logs/
 
-notebooks/mitch/images/
-notebooks/mitch/overlay/
-references/code/
-references/*.zip
+
+logs/
+notebooks/
+references/
 .DS_Store
 data/
 token.pickle
 *.swp
+final_vt*
 
+.ipynb_checkpoints
+mongo_to_df.ipynb
+mongo_data_munging.ipynb
+static/images

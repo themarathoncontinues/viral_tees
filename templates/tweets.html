@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1 class="display-5">{{ header }}</h1>
+
+{% endblock %}
+
+{% block subheader %}
+  {{ subheader }}  <small class="text-mute h6" style="opacity: .5">Displaying 3500 records</small>
+{% endblock %}
+
+{% block content %}
+
+
+<div id="accordion">
+    {% for d in data %}
+
+    <div class="card">
+      <div class="card-header">
+        <a class="card-link" data-toggle="collapse" href="#h_{{ loop.index }}">
+          {{ d['_id'] }}
+        </a>
+      </div>
+      <div id="h_{{ loop.index }}" class="collapse" data-parent="#accordion">
+        <div class="card-body">
+
+<div class="table-responsive" id="table">
+  <table class="table table-striped table-hover table-sm" data-toggle="table">
+    <thead>
+      <tr>
+        <th scope="col" class="sort" data-sort="id">#</th>
+        <th scope="col" class="sort" data-sort="twid">Twitter ID</th>
+        <th scope="col" class="sort" data-sort="date">Date</th>
+        <th scope="col" class="sort" data-sort="loc">Location</th>
+        <th scope="col" class="sort" data-sort="trend">Trend</th>
+        <th scope="col" class="sort" data-sort="url">Image URL</th>
+        <th scope="col" class="sort" data-sort="user">User</th>
+        <th scope="col" class="sort" data-sort="rts">Retweets</th>
+        <th scope="col" class="sort" data-sort="favs">Favorites</th>
+      </tr>
+    </thead>
+    <tbody class="list">
+          {% for trend in d['scope']['tweets'] %}
+
+
+         <tr>
+            <td scope="row" class="id"> {{ loop.index }} </th>
+            <td class="twid"> {{ trend['tweet_id'] }} </th>
+            <td class="date"> {{ d['scope']['date'] }} </th>
+            <td class="loc"> {{ d['scope']['loc'] }} </th>
+            <td class="trend"> {{ trend['trend'] }} </th>
+            <td class="url"><{{ trend['media_url'] }}</th>
+            <td class="user"> {{ trend['user'] }} </td>
+            <td class="rts"> {{ trend['retweet_count'] }} </td>
+            <td class="favs"> {{ trend['favorite_count'] }} </td>
+         </tr>
+                {% endfor %}
+
+    </tbody>
+  </table>
+</div>
+
+        </div>
+      </div>
+    </div>
+     {% endfor %}
+
+  </div>
+
+{% endblock %}

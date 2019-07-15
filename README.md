@@ -21,39 +21,86 @@ TWITTER_API_KEY="{twitter-api}"
 TWITTER_API_SECRET="{twitter-api}"
 TWITTER_API_TOKEN="{twitter-api}"
 TWITTER_API_ACCESS="{twitter-api}"
+
+FACEBOOK_TOKEN="{facebook-api}"
+FACEBOOK_APP_ID="{facebook-api}"
+FACEBOOK_APP_SECRET="{facebook-api}"
+FACEBOOK_AD_ACCT_ID="{facebook-api}"
+FACEBOOK_BUSINESS_ID="{facebook-api}"
+FACEBOOK_PAGE_ID="{facebook-api}"
+FACEBOOK_PIXEL_ID="{facebook-api}"
+
+MONGO_SERVER="{server}"
+MONGO_PORT="{port}"
+MONGO_DATABASE="{database}"
 ```
 
-4) Open 2 terminals: 
+4) Open 4 terminals:
 - `luigid`
-- `python run_luigi.py RunPipeline`
+- `mongod --port=$MONGO_PORT`
+- `python run_luigi.py --all`
+- `python app.py`
 
 ## Tasks
 
-1) `CleanData`
+1) `DeepClean`
 
-Removes `data` folder and all files within. 
+Removes `data` and `static` folders and all files within.
+`python run_luigi.py --flow clean`
 
 2) `StartLogging`
 
 Start logging mechanism of pipeline
 
-3) `QueryTwitter`
+3) `QueryTwitterTrends`
 
-For each city metro location, return a CSV dataframe containing trending tweets, with volumes and links.
+For each city metro location in `run_luigi.py`, write to json with trend data.
 
-4) `TrimTrendsData`
+4) `StoreTrendsData`
 
-Filters Twitter trends to prepare for image saving.
+For each json saved by `QueryTwitterTrends` write data to mongo
 
-5) `SaveImages`
+5) `StoreTrimTrendsData`
+
+Query mongo for all trends in current run, and generate a unique list of trends for all metro regions
+
+6) `StoreImageTweets`
+
+Query Twitter via tweepy and save only tweets with images to mongo
+
+7) `SaveImage`
 
 Saves images from filtered trends data.
 
-6) `RunPipeline`
+8) `CropImage`
 
-Runs entire pipeline.
+Cropping images based on a cv2 KeyPoints heuristic
 
-![Screen Shot](https://i.imgur.com/qSORVn4.png "Pipeline")
+9) `ParseImageTweets`
+
+Parse out images in order to host on backend via Flask
+
+10) `ImageOverlay`
+
+Overlay cropped images onto background shirt image along with text outlining the trend and date
+
+11) `GenerateShirtData`
+
+Using data stored in mongo, develop a set of data in order to post shirts to Shopify
+
+12) `PostShopify`
+
+From the data generated in `GenerateData` and the shirt produced in `ImageOverlay` post a product to Shopify
+
+13) `OutputTwitterTasks`
+
+Dependency Graph
+![Screen Shot](https://imgur.com/Ps8DuNJ.png)
+
+14) `OutputImageTasks`
+
+Dependency Graph
+![Screen Shot](https://imgur.com/J9cwsnk.png)
 
 
 ### References

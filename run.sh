@@ -9,8 +9,6 @@ PWD=/root
 source /home/envs/vt/bin/activate
 source /home/git/viral_tees/.env
 
-python /home/git/viral_tees/run_luigi.py RunPipeline 
-
-python /home/git/viral_tees/run_luigi.py DeepClean
+python /home/git/viral_tees/run_luigi.py --all 
 
 deactivate
