@@ -99,7 +99,7 @@ def run(args_dict):
     img = overlay_transparent(background, overlay, x, y)
 
     filename = args_dict['image']
-    trend_name = (filename.split('/')[-1]).split('_', 1)[0]
+    trend_name = args_dict['name']
     img = add_text(img, trend_name)
 
     return img
@@ -110,6 +110,8 @@ if __name__ == '__main__':
         description='Overlay cropped image on background t-shirt')
     parser.add_argument('-i', '--image', required=True,
         help='Path to overlay image on background t-shirt.')
+    parser.add_argument('-n', '--name', required=True,
+        help='Name of trend dicionary for text overlay.')
     parser.add_argument('-b', '--background', required=False,
         default='/home/git/viral_tees/static/background.jpg',
         help='Path to overlay image on t-shirt.')
