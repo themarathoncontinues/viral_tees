@@ -485,8 +485,6 @@ class OutputShirtTasks(luigi.WrapperTask):
 
         chosen_data = choose(self.date)
 
-        import ipdb; ipdb.set_trace()
-
         if len(chosen_data) == 0:
             self.done = True
         else:
@@ -602,8 +600,6 @@ class OutputShopifyTasks(luigi.WrapperTask):
         gen_shirt_lst = find_by_luigi_at(shirts, self.date)
 
         img_lst = [img['scope']['meta']['crop_img'] for img in shopify.find()]
-
-        import ipdb; ipdb.set_trace()
 
         for shirt in gen_shirt_lst:
             # datetime is not JSON serializable
