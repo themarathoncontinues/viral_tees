@@ -90,13 +90,30 @@ class DeepClean(ExternalProgramTask):
         return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
 
 
-class SoftClean(ExternalProgramTask):
+class SoftClean(luigi.Task):
     '''
     Deletes images not used in Shopify.
     '''
 
+    done = False
+
     def requires(self):
-        import ipdb; ipdb.set_trace()
+        from models.mongo import connect_db
+
+        conn = connect_db()
+        db = conn['viral-tees']
+        shopify = db['shopify']
+
+        files = glob.glob('static/images/[!shirt]*')
+
+        for file in files:
+
+            os.remove(file)
+
+
+    def complete(self):
+
+        return self.done
 
 
 ####### PIPELINE
