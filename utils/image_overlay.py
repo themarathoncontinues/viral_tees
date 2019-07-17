@@ -98,7 +98,6 @@ def run(args_dict):
 
     img = overlay_transparent(background, overlay, x, y)
 
-    filename = args_dict['image']
     trend_name = args_dict['name']
     img = add_text(img, trend_name)
 
