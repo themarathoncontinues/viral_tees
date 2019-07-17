@@ -89,6 +89,16 @@ class DeepClean(ExternalProgramTask):
         vt_logging.warning('Cleaned data drive.')
         return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
 
+
+class SoftClean(ExternalProgramTask):
+    '''
+    Deletes images not used in Shopify.
+    '''
+
+    def requires(self):
+        import ipdb; ipdb.set_trace()
+
+
 ####### PIPELINE
 
 
@@ -646,6 +656,8 @@ def run(args_dict):
     else:
         raise Exception('Something went wrong.')
 
+    if args_dict['soft']:
+        luigi.build([SoftClean()])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -656,6 +668,8 @@ if __name__ == '__main__':
     parser.add_argument('--flow', required=False, nargs='*',
         choices=['tweets', 'images', 'shirts', 'shopify', 'clean'],
         help='Add this flag to choose which flow to run.')
+    parser.add_argument('--soft', action='store_true',
+        default=False, help='Add this flag to clean images unused.')
 
     args_dict = vars(parser.parse_args())
 
