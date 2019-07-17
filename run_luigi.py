@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import json
+import glob
 import logging as vt_logging
 import luigi
 import os
@@ -104,12 +105,14 @@ class SoftClean(luigi.Task):
         db = conn['viral-tees']
         shopify = db['shopify']
 
-        files = glob.glob('static/images/[!shirt]*')
+        # keep these for image comparison on ec2
+        keep = [x['scope']['meta']['crop_img'] for x in shopify.find()]
+        imgs = glob.glob(os.getcwd() + '/static/images/*')
+        delete = list(set(imgs) - set(keep))
 
-        for file in files:
+        for file in delete:
 
             os.remove(file)
-
 
     def complete(self):
 
@@ -560,11 +563,11 @@ class PostShopify(luigi.Task):
         }
 
         stamp = datetime.now()
-        time_info = stamp.strftime("%A, %B %d, %Y - %I:%M%:%S")
+        time_info = stamp.strftime("%A, %B %d, %Y - %I:%M:%S")
         city_info = location_full[info['luigi_loc']]
 
         description = '''
-            <b>SKU:</b> {} <br>
+            <b>SKU:</b> {} <br><br>
             <b>Location:</b> {} <br>
             <b>Time:</b> {} <br>
             <b>Trend:</b> {} <br>
