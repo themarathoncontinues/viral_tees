@@ -1,5 +1,5 @@
 import pyqrcode
-from .constants import IMAGES_DIR
+from utils.constants import IMAGES_DIR
 
 
 def generate_qr_code(args_dict):
