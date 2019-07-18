@@ -31,6 +31,7 @@ from utils.constants import \
     RESPONSE_JSON, \
     ENV_PATH, \
     TMP_DIR
+from utils.slackbot import exception as slack
 
 
 load_dotenv(dotenv_path=ENV_PATH)
@@ -86,6 +87,7 @@ location_full = {
 
 class DeepClean(ExternalProgramTask):
 
+    @slack
     def program_args(self):
         vt_logging.warning('Cleaned data drive.')
         return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
@@ -98,6 +100,7 @@ class SoftClean(luigi.Task):
 
     done = False
 
+    @slack
     def requires(self):
         from models.mongo import connect_db
 
@@ -147,15 +150,18 @@ class QueryTwitterTrends(luigi.Task):
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
 
+    @slack
     def requires(self):
         return StartLogging(date=self.date)
 
+    @slack
     def output(self):
         fname = 'trends_{}_{}.json'.format(self.date.strftime(DATESTRFORMAT), self.loc)
         fout = TRENDS_DIR / fname
 
         return luigi.LocalTarget(fout)
 
+    @slack
     def run(self):
         from utils.retrieve_trends import auth, get_trends
 
@@ -172,9 +178,11 @@ class StoreTrendsData(luigi.Task):
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
 
+    @slack
     def requires(self):
         return QueryTwitterTrends(date=self.date, loc=self.loc)
 
+    @slack
     def output(self):
         from models.mongo import connect_db
         
@@ -188,6 +196,7 @@ class StoreTrendsData(luigi.Task):
             'scope'
         )
 
+    @slack
     def run(self):
         query_json = self.requires().output().path
         f = open(query_json, 'r')
@@ -208,9 +217,11 @@ class StoreTrimTrendsData(luigi.Task):
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
 
+    @slack
     def requires(self):
         return StoreTrendsData(date=self.date, loc=self.loc)
 
+    @slack
     def output(self):
         from models.mongo import connect_db
 
@@ -224,6 +235,7 @@ class StoreTrimTrendsData(luigi.Task):
             'scope'
         )
 
+    @slack
     def run(self):
         from utils.cref_trends import generate_unique_trends
 
@@ -252,9 +264,11 @@ class StoreImageTweets(luigi.Task):
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
 
+    @slack
     def requires(self):
         return StoreTrimTrendsData(date=self.date, loc=self.loc)
 
+    @slack
     def output(self):
         from models.mongo import connect_db
 
@@ -268,6 +282,7 @@ class StoreImageTweets(luigi.Task):
             'scope'
         )
 
+    @slack
     def run(self):
         from utils.get_images import image_parser, sort_tweets_with_images
 
@@ -287,17 +302,20 @@ class OutputTwitterTasks(luigi.WrapperTask):
 
     date = luigi.DateMinuteParameter(default=datetime.now())
 
+    @slack
     def requires(self):
 
         for loc in locations:
          yield StoreImageTweets(date=self.date, loc=loc)
 
+    @slack
     def output(self):
 
         # clean this directory up
         fout = RESPONSE_JSON / 'summary_{}.json'.format(self.date.strftime(DATESTRFORMAT))
         return luigi.LocalTarget(str(fout))
 
+    @slack
     def run(self):
 
         summary = {}
@@ -325,6 +343,7 @@ class SaveImage(luigi.Task):
     loc = luigi.Parameter()
     tweet = luigi.DictParameter()
 
+    @slack
     def output(self):
 
         fname = f"{abs(hash(self.tweet['media_url']))}_{self.date.strftime(DATESTRFORMAT)}_{self.loc}.jpg"
@@ -332,6 +351,7 @@ class SaveImage(luigi.Task):
         os.makedirs(os.path.dirname(fout), exist_ok=True)
         return luigi.LocalTarget(fout)
 
+    @slack
     def run(self):
 
         response = requests.get(self.tweet['media_url']).content
@@ -346,10 +366,12 @@ class CropImage(luigi.Task):
     loc = luigi.Parameter()
     tweet = luigi.DictParameter()
 
+    @slack
     def requires(self):
 
         return SaveImage(loc=self.loc, date=self.date, tweet=self.tweet)
 
+    @slack
     def output(self):
 
         fname = f"cropped_{abs(hash(self.tweet['media_url']))}_{self.date.strftime(DATESTRFORMAT)}_{self.loc}.jpg"
@@ -357,6 +379,7 @@ class CropImage(luigi.Task):
         os.makedirs(os.path.dirname(fout), exist_ok=True)
         return luigi.LocalTarget(fout)
 
+    @slack
     def run(self):
         from utils.image_munge import run as munge
 
@@ -372,6 +395,7 @@ class ParseImageTweets(luigi.WrapperTask):
     date = luigi.DateMinuteParameter()
     loc = luigi.Parameter()
 
+    @slack
     def requires(self):
         from models.mongo import connect_db, get_collection, find_by_id
 
@@ -384,6 +408,7 @@ class ParseImageTweets(luigi.WrapperTask):
         for tw in doc['scope']['tweets']:
             yield CropImage(loc=self.loc, date=self.date, tweet=tw)
 
+    @slack
     def output(self):
         from models.mongo import connect_db
 
@@ -397,6 +422,7 @@ class ParseImageTweets(luigi.WrapperTask):
             'scope'
         )
 
+    @slack
     def run(self):
 
         images = []
@@ -420,6 +446,7 @@ class OutputImageTasks(luigi.WrapperTask):
     
     date = luigi.DateMinuteParameter(default=datetime.now())
 
+    @slack
     def requires(self):
 
         for loc in locations:
@@ -436,6 +463,7 @@ class ImageOverlay(luigi.Task):
 
     data = luigi.DictParameter()
 
+    @slack
     def output(self):
         meta = dict(self.data.get_wrapped())
 
@@ -445,6 +473,7 @@ class ImageOverlay(luigi.Task):
 
         return luigi.LocalTarget(fout)
 
+    @slack
     def run(self):
         from utils.image_overlay import run as image_overlay
         from utils.qr_code_generator import generate_qr_code as qrcode
@@ -476,9 +505,11 @@ class GenerateShirtData(luigi.Task):
     data = luigi.DictParameter()
     date = luigi.DateMinuteParameter()
 
+    @slack
     def requires(self):
         return ImageOverlay(data=self.data)
 
+    @slack
     def output(self):
         from models.mongo import connect_db
 
@@ -492,6 +523,7 @@ class GenerateShirtData(luigi.Task):
             'scope'
         )
 
+    @slack
     def run(self):
         
         meta = self.requires().param_kwargs['data']
@@ -517,6 +549,7 @@ class OutputShirtTasks(luigi.WrapperTask):
     date = luigi.DateMinuteParameter(default=datetime.now())
     done = False
 
+    @slack
     def requires(self):
         from utils.image_choose import run as choose
 
@@ -537,6 +570,7 @@ class PostShopify(luigi.Task):
 
     shirt = luigi.DictParameter()
 
+    @slack
     def output(self):
         from models.mongo import connect_db
 
@@ -552,6 +586,7 @@ class PostShopify(luigi.Task):
             'scope'
         )
 
+    @slack
     def run(self):
         from utils.post_shopify import create_product, post_image
 
@@ -623,6 +658,7 @@ class OutputShopifyTasks(luigi.WrapperTask):
     date = luigi.DateMinuteParameter(default=datetime.now())
     done = False
 
+    @slack
     def requires(self):
 
         from models.mongo import connect_db, find_by_luigi_at
@@ -650,12 +686,12 @@ class OutputShopifyTasks(luigi.WrapperTask):
             else:
                 yield PostShopify(shirt=shirt)
 
+    @slack
     def complete(self):
 
         return self.done
 
-
-
+@slack
 def run(args_dict):
     date = datetime.now()
 

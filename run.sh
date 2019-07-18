@@ -9,6 +9,6 @@ PWD=/root
 source /home/envs/vt/bin/activate
 source /home/git/viral_tees/.env
 
-python /home/git/viral_tees/run_luigi.py --all 
+python /home/git/viral_tees/run_luigi.py --all --soft 
 
 deactivate
