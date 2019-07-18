@@ -9,6 +9,7 @@ from itertools import groupby
 from pathlib import Path
 from utils.constants import ENV_PATH
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -32,7 +33,7 @@ def image_parser(trends):
     :return list of tweets with images:
     """
 
-    MAX_TWEETS = 35
+    MAX_TWEETS = 30
 
     logger.info(f'Trends being queried: {trends}')
 
