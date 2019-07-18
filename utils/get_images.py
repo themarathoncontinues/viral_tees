@@ -9,6 +9,7 @@ from itertools import groupby
 from pathlib import Path
 from utils.constants import ENV_PATH
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 

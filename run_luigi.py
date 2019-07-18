@@ -1,6 +1,7 @@
 import argparse
 import cv2
 import json
+import glob
 import logging as vt_logging
 import luigi
 import os
@@ -63,6 +64,22 @@ locations = [
     'usa-sea',
 ]
 
+location_full = {
+    'usa-nyc': 'New York City',
+    'usa-lax': 'Los Angeles',
+    'usa-chi': 'Chicago',
+    'usa-dal': 'Dallas',
+    'usa-hou': 'Houston',
+    'usa-wdc': 'Washington, D.C.',
+    'usa-mia': 'Miami',
+    'usa-phi': 'Philadelphia',
+    'usa-atl': 'Atlanta',
+    'usa-bos': 'Boston',
+    'usa-sfo': 'San Francisco',
+    'usa-det': 'Detroit',
+    'usa-sea': 'Seattle',
+}
+
 
 ####### UTILITY TASKS
 
@@ -72,6 +89,35 @@ class DeepClean(ExternalProgramTask):
     def program_args(self):
         vt_logging.warning('Cleaned data drive.')
         return ['{}/execs/clean_data.sh'.format(SRC_DIR)]
+
+
+class SoftClean(luigi.Task):
+    '''
+    Deletes images not used in Shopify.
+    '''
+
+    done = False
+
+    def requires(self):
+        from models.mongo import connect_db
+
+        conn = connect_db()
+        db = conn['viral-tees']
+        shopify = db['shopify']
+
+        # keep these for image comparison on ec2
+        keep = [x['scope']['meta']['crop_img'] for x in shopify.find()]
+        imgs = glob.glob(os.getcwd() + '/static/images/*')
+        delete = list(set(imgs) - set(keep))
+
+        for file in delete:
+
+            os.remove(file)
+
+    def complete(self):
+
+        return self.done
+
 
 ####### PIPELINE
 
@@ -458,7 +504,7 @@ class GenerateShirtData(luigi.Task):
             'volume': meta.get('trend').get('volume'),
             'tweet_id': meta.get('tweet').get('tweet_id'),
             'og_img': meta.get('tweet').get('img_path'),
-            'crop_img': meta.get('tweet').get('cropped_path'),
+            'crop_img': meta.get('tweet').get('crop_path'),
             'shirt_img': self.requires().output().path,
             'price': 25
         }
@@ -483,6 +529,7 @@ class OutputShirtTasks(luigi.WrapperTask):
                 yield GenerateShirtData(data=choice, date=self.date)
 
     def complete(self):
+
         return self.done
 
 
@@ -491,15 +538,19 @@ class PostShopify(luigi.Task):
     shirt = luigi.DictParameter()
 
     def output(self):
+        from models.mongo import connect_db
 
         idx = self.shirt.get('_id')
         name = idx.replace('shirt', 'shopify')
 
         # this needs to go to Mongo in next version
-        fout = f'{name}.json'
-        fout = RESPONSE_JSON / fout
-        os.makedirs(os.path.dirname(fout), exist_ok=True)
-        return luigi.LocalTarget(str(fout.absolute()))
+        return MongoCellTarget(
+            connect_db(MONGO_SERVER, MONGO_PORT),
+            MONGO_DATABASE,
+            'shopify',
+            name,
+            'scope'
+        )
 
     def run(self):
         from utils.post_shopify import create_product, post_image
@@ -513,27 +564,35 @@ class PostShopify(luigi.Task):
             'trend': meta.get('trend'),
             'volume': meta.get('volume'),
             'tweet_id': meta.get('tweet_id'),
+            'crop_img': meta.get('crop_img'),
+            'shirt_img': meta.get('shirt_img'),
             'price': 25
         }
 
+        stamp = datetime.now()
+        time_info = stamp.strftime("%A, %B %d, %Y - %I:%M:%S")
+        city_info = location_full[info['luigi_loc']]
+
         description = '''
-            id: {} <br>
-            location: {} <br>
-            time: {} <br>
-            trend: {} <br>
-            volume: {} <br>
-            tweet_id: {} <br>
+            <b>SKU:</b> {} <br><br>
+            <b>Location:</b> {} <br>
+            <b>Time:</b> {} <br>
+            <b>Trend:</b> {} <br>
+            <b>Volume:</b> {} <br><br>
+            <a href="https://twitter.com/anyuser/status/{}">Original Tweet</a> <br>
         '''.format(
             info['id'],
-            info['luigi_loc'],
-            info['luigi_at'],
+            city_info,
+            time_info,
             info['trend'],
             info['volume'],
             info['tweet_id'],
         )
 
+        title = f"{info['trend']} ({city_info} | {time_info})"
+
         input_dict = {
-            'title': info['id'],
+            'title': title,
             'body_html': description,
             'variants': [{
                 'title': info['trend'],
@@ -544,15 +603,19 @@ class PostShopify(luigi.Task):
         response = create_product(input_dict)
 
         img_dict = {
-            'img': meta.get('shirt_img')
+            'img': info['shirt_img']
         }
 
         img_response = post_image(img_dict, response)
 
-        r_dict = response.json()
-        f = open(self.output().path, 'w')
-        json.dump(r_dict, f, indent=4)
-        f.close()
+        data = {
+            'meta': info,
+            'shirt_post': response.json(),
+            'img_post': img_response.json(),
+            'shopify_status': 'live'
+        }
+
+        self.output().write(data)
 
 
 class OutputShopifyTasks(luigi.WrapperTask):
@@ -561,19 +624,36 @@ class OutputShopifyTasks(luigi.WrapperTask):
     done = False
 
     def requires(self):
+
         from models.mongo import connect_db, find_by_luigi_at
+        from utils.image_munge import check_same
 
         conn = connect_db()
         db = conn[MONGO_DATABASE]
-        col = db['shirts']
+        shirts = db['shirts']
+        shopify = db['shopify']
+        conn = conn.close()
 
-        data = find_by_luigi_at(col, self.date)
+        gen_shirt_lst = find_by_luigi_at(shirts, self.date)
 
-        for shirt in data:
+        img_lst = [img['scope']['meta']['crop_img'] for img in shopify.find()]
+
+        for shirt in gen_shirt_lst:
             # datetime is not JSON serializable
-            shirt['scope']['luigi_at'] = shirt['scope']['luigi_at'].strftime(DATESTRFORMAT)
+            shirt['scope']['luigi_at'] = \
+                shirt['scope']['luigi_at'].strftime(DATESTRFORMAT)
 
-            yield PostShopify(shirt=shirt)
+            is_old = check_same(shirt['scope']['crop_img'], img_lst)
+
+            if is_old:
+                self.done = True
+            else:
+                yield PostShopify(shirt=shirt)
+
+    def complete(self):
+
+        return self.done
+
 
 
 def run(args_dict):
@@ -603,6 +683,8 @@ def run(args_dict):
     else:
         raise Exception('Something went wrong.')
 
+    if args_dict['soft']:
+        luigi.build([SoftClean()])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -613,6 +695,8 @@ if __name__ == '__main__':
     parser.add_argument('--flow', required=False, nargs='*',
         choices=['tweets', 'images', 'shirts', 'shopify', 'clean'],
         help='Add this flag to choose which flow to run.')
+    parser.add_argument('--soft', action='store_true',
+        default=False, help='Add this flag to clean images unused.')
 
     args_dict = vars(parser.parse_args())
 

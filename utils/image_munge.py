@@ -1,9 +1,38 @@
 import argparse
 import cv2
 import logging
+import numpy as np
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+
+def check_same(image, lst_of_imgs):
+
+    original = cv2.imread(image)
+
+    if len(lst_of_imgs) > 0:
+
+        for img in lst_of_imgs:
+
+            tmp = cv2.imread(img)
+
+            if original.shape == tmp.shape:
+
+                difference = cv2.subtract(original, tmp)
+                b, g, r = cv2.split(difference)
+
+                if cv2.countNonZero(b) == 0 \
+                    and cv2.countNonZero(g) == 0 \
+                    and cv2.countNonZero(r) == 0:
+
+                    print('Original:', image)
+                    print('Found:', img)
+
+                    return True
+
+    return False
 
 
 def read_image(fp):
