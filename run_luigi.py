@@ -401,21 +401,28 @@ class ImageOverlay(luigi.Task):
 
     def run(self):
         from utils.image_overlay import run as image_overlay
+        from utils.qr_code_generator import generate_qr_code as qrcode
 
         args_dict = {
             'image': self.data['tweet']['crop_path'],
             'name': self.data['trend'].get('name'),
+            'tweet_id': self.data['tweet']['tweet_id'],
+            'luigi_at': self.data['luigi_at'],
+            'luigi_loc': self.data['luigi_loc'],
+            'media_url': self.data['tweet']['media_url'],
+            'user': self.data['tweet']['user'],
             'background': str(SHIRT_BG.absolute()),
             'output': self.output().path
         }
 
         img = image_overlay(args_dict)
+        qr = qrcode(args_dict)
 
         fname = self.output().path
         f = open(fname, 'wb')
         cv2.imwrite(f.name, img)
         f.close()
-        vt_logging.info('T-Shirt generated.')
+        vt_logging.info('T-Shirt and QR generated.')
 
 
 class GenerateShirtData(luigi.Task):
