@@ -27,6 +27,31 @@ def index():
     )
 
 
+@app.route('/charts-view')
+def chart_data():
+	conn = connect_db()
+	trends = get_collection(conn, 'trends')
+	trends_data = [x for x in trends.find().sort('scope.luigi_at', -1)]
+	trends = trends_data[0]
+	conn = conn.close()
+
+	values = [x['tweet_volume'] for x in trends['scope']['trends']
+				if x['tweet_volume'] is not None]
+	labels = [x['name'] for x in trends['scope']['trends']][:len(values)]
+
+	data = {
+		'labels': labels,
+		'values': values,
+		'legend': 'Tweet Volume'
+	}
+
+	return render_template(
+		'charts.html',
+		header='Charts',
+		data=data
+	)
+
+
 @app.route('/trends-view')
 def trend_data():
 	conn = connect_db()
