@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1 class="display-5">{{ header }}</h1>
+{% endblock %}
+
+{% block content %}
+
+<!-- bar chart canvas element -->
+
+<div class="row" style="margin-bottom: 30px">
+  <div class="col-sm-4">
+    <div class="card">
+
+      <div class="card-body">
+      	<h5 class="card-title">Trends</h5>
+      	<canvas id="vt_chart1" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+      	<h5 class="card-title">Trends</h5>
+      	<canvas id="vt_chart2" height="300"></canvas>
+
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+      	<h5 class="card-title">Trends</h5>
+      	<canvas id="vt_chart3" height="300"></canvas>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row" style="margin-bottom: 30px">
+  <div class="col-sm-4">
+    <div class="card">
+
+      <div class="card-body">
+      	<h5 class="card-title">Trends</h5>
+      	<canvas id="vt_chart4" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+      	<h5 class="card-title">Trends</h5>
+      	<canvas id="vt_chart5" height="300"></canvas>
+
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-4">
+    <div class="card">
+      <div class="card-body">
+      	<h5 class="card-title">Trends</h5>
+      	<canvas id="vt_chart6" height="300"></canvas>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+// Global parameters:
+// do not resize the chart canvas when its container does (keep at 600x400px)
+Chart.defaults.global.responsive = true;
+
+// define the chart data
+var chartData = {
+  labels : [{% for item in data['labels'] %}
+             "{{item}}",
+            {% endfor %}],
+  datasets : [{
+      label: '{{ data['legend'] }}',
+      fill: true,
+      lineTension: 0.1,
+      backgroundColor: "rgba(75,192,192,0.4)",
+      borderColor: "rgba(75,192,192,1)",
+      borderCapStyle: 'butt',
+      borderDash: [],
+      borderDashOffset: 0.0,
+      borderJoinStyle: 'miter',
+      borderWidth: 1,
+      pointBorderColor: "rgba(75,192,192,1)",
+      pointBackgroundColor: "#fff",
+      pointBorderWidth: 1,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: getRandomColor(),
+      pointHoverBorderColor: getRandomColor(),
+      pointHoverBorderWidth: 2,
+      pointRadius: 1,
+      pointHitRadius: 10,
+      data : [{% for item in data['values'] %}
+                {{item}},
+              {% endfor %}],
+      spanGaps: false
+  }]
+}
+ 
+// get chart canvas
+var ctx1 = document.getElementById("vt_chart1").getContext("2d");
+var ctx2 = document.getElementById("vt_chart2").getContext("2d");
+var ctx3 = document.getElementById("vt_chart3").getContext("2d");
+var ctx4 = document.getElementById("vt_chart4").getContext("2d");
+var ctx5 = document.getElementById("vt_chart5").getContext("2d");
+var ctx6 = document.getElementById("vt_chart6").getContext("2d");
+ 
+// create the chart using the chart canvas
+var vt_chart1 = new Chart(ctx1, {
+  type: 'line',
+  data: chartData,
+});
+
+var vt_chart2 = new Chart(ctx2, {
+  type: 'bar',
+  data: chartData,
+});
+
+var vt_chart3 = new Chart(ctx3, {
+  type: 'radar',
+  data: chartData,
+});
+
+// create the chart using the chart canvas
+var vt_chart4 = new Chart(ctx4, {
+  type: 'pie',
+  data: chartData,
+});
+
+var vt_chart5 = new Chart(ctx5, {
+  type: 'doughnut',
+  data: chartData,
+});
+
+var vt_chart6 = new Chart(ctx6, {
+  type: 'polarArea',
+  data: chartData,
+});
+
+</script>
+
+{% endblock %}
+
