@@ -1,3 +1,9 @@
+<!-- https://stackoverflow.com/questions/53836114/chart-js-not-updating-or-receiving-data-from-flask-python 
+
+https://www.youtube.com/watch?v=De-zusP8QVM
+http://tmroyal.github.io/Chart.HeatMap/
+-->
+
 {% extends 'base.html' %}
 
 {% block header %}
@@ -39,34 +45,59 @@
 </div>
 
 <div class="row" style="margin-bottom: 30px">
-  <div class="col-sm-4">
+    <div class="col-sm-12">
     <div class="card">
 
       <div class="card-body">
-      	<h5 class="card-title">Trends</h5>
-      	<canvas id="vt_chart4" height="300"></canvas>
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-4">
-    <div class="card">
-      <div class="card-body">
-      	<h5 class="card-title">Trends</h5>
-      	<canvas id="vt_chart5" height="300"></canvas>
-
-      </div>
-    </div>
-  </div>
-  <div class="col-sm-4">
-    <div class="card">
-      <div class="card-body">
-      	<h5 class="card-title">Trends</h5>
-      	<canvas id="vt_chart6" height="300"></canvas>
-
+        <h5 class="card-title">Trends</h5>
+      <div id="regions_div" style="width: 100%; height: 500px;"></div>
       </div>
     </div>
   </div>
 </div>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {
+        'packages':['geochart', 'geomap'],
+        // Note: you will need to get a mapsApiKey for your project.
+        // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+        'mapsApiKey': 'AIzaSyC4Fmq5AnzuOuVc8S97bdTf0K5hqAlWxas'
+      });
+      google.charts.setOnLoadCallback(drawRegionsMap);
+
+      function drawRegionsMap() {
+        var data = google.visualization.arrayToDataTable([
+          ['Region', 'Trend Volume'], // DMA codes: https://support.highwinds.com/customer/en/portal/articles/2558870-list-of-dma-codes?b_id=15425
+          ['501', 250], // New York City
+          ['803', 200], // Los Angeles
+          ['602', 300], // Chicago
+          ['623', 400], // Dallas
+          ['618', 500], // Houston
+          ['511', 600], // Washington, D.C.
+          ['528', 700], // Miami
+          ['504', 800], // Philadelphia
+          ['524', 450], // Atlanta
+          ['506', 350], // Boston
+          ['807', 250], // San Francisco
+          ['505', 750], // Detroit
+          ['819', 150], // Seattle
+        ]);
+
+        var options = {
+          colors: ['#4bc0c0'],
+          region: 'US',
+          dataMode: 'markers',
+          resolution: 'metros',
+        };
+
+        var chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+
+        chart.draw(data, options);
+      }
+    </script>
+
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-colorschemes"></script>
 
 <script>
 
@@ -119,38 +150,19 @@ var chartData = {
 var ctx1 = document.getElementById("vt_chart1").getContext("2d");
 var ctx2 = document.getElementById("vt_chart2").getContext("2d");
 var ctx3 = document.getElementById("vt_chart3").getContext("2d");
-var ctx4 = document.getElementById("vt_chart4").getContext("2d");
-var ctx5 = document.getElementById("vt_chart5").getContext("2d");
-var ctx6 = document.getElementById("vt_chart6").getContext("2d");
- 
+
 // create the chart using the chart canvas
 var vt_chart1 = new Chart(ctx1, {
-  type: 'line',
-  data: chartData,
-});
-
-var vt_chart2 = new Chart(ctx2, {
   type: 'bar',
   data: chartData,
 });
 
-var vt_chart3 = new Chart(ctx3, {
-  type: 'radar',
-  data: chartData,
-});
-
-// create the chart using the chart canvas
-var vt_chart4 = new Chart(ctx4, {
-  type: 'pie',
-  data: chartData,
-});
-
-var vt_chart5 = new Chart(ctx5, {
+var vt_chart2 = new Chart(ctx2, {
   type: 'doughnut',
   data: chartData,
 });
 
-var vt_chart6 = new Chart(ctx6, {
+var vt_chart3 = new Chart(ctx3, {
   type: 'polarArea',
   data: chartData,
 });
