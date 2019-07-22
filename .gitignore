@@ -22,4 +22,5 @@ final_vt*
 .ipynb_checkpoints
 mongo_to_df.ipynb
 mongo_data_munging.ipynb
+trend_clustering.ipynb
 static/images
