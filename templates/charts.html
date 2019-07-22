@@ -14,7 +14,7 @@ http://tmroyal.github.io/Chart.HeatMap/
 
 <!-- bar chart canvas element -->
 
-<div class="row" style="margin-bottom: 30px">
+<div class="row" style="margin-bottom: 20px">
   <div class="col-sm-4">
     <div class="card">
 
@@ -44,7 +44,7 @@ http://tmroyal.github.io/Chart.HeatMap/
   </div>
 </div>
 
-<div class="row" style="margin-bottom: 30px">
+<div class="row" style="margin-bottom: 20px">
     <div class="col-sm-12">
     <div class="card">
 
@@ -85,10 +85,11 @@ http://tmroyal.github.io/Chart.HeatMap/
         ]);
 
         var options = {
-          colors: ['#4bc0c0'],
+          colors: [getRandomColor()],
           region: 'US',
           dataMode: 'markers',
           resolution: 'metros',
+          legend: null,
         };
 
         var chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
