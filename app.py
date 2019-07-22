@@ -32,7 +32,7 @@ def chart_data():
 	conn = connect_db()
 	trends = get_collection(conn, 'trends')
 	trends_data = [x for x in trends.find().sort('scope.luigi_at', -1)]
-	trends = trends_data[0]
+	trends = trends_data[12]
 	conn = conn.close()
 
 	values = [x['tweet_volume'] for x in trends['scope']['trends']
