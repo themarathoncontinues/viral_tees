@@ -110,7 +110,7 @@ class SoftClean(luigi.Task):
 
         # keep these for image comparison on ec2
         keep = [x['scope']['meta']['crop_img'] for x in shopify.find()]
-        imgs = glob.glob(os.getcwd() + '/static/images/*')
+        imgs = [x for x in IMAGES_DIR.glob('*')]
         delete = list(set(imgs) - set(keep))
 
         for file in delete:
