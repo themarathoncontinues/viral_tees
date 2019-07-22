@@ -32,6 +32,7 @@ def check_same(image, lst_of_imgs):
 
                     return True
 
+    
     return False
 
 
