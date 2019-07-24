@@ -477,7 +477,7 @@ class ImageOverlay(luigi.Task):
     def run(self):
         from utils.image_overlay import run as image_overlay
         from utils.qr_code_generator import generate_qr_code as qrcode
-        import ipdb; ipdb.set_trace()
+
         args_dict = {
             'image': self.data['tweet']['crop_path'],
             'name': self.data['tweet'].get('trend'),
