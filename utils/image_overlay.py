@@ -45,7 +45,7 @@ def overlay_transparent(background, overlay, x, y):
         overlay = np.concatenate(
             [
                 overlay,
-                np.ones((overlay.shape[0], overlay.shape[1], 1), dtype = overlay.dtype) * 255
+                np.ones((overlay.shape[0], overlay.shape[1], 1), dtype=overlay.dtype) * 255
             ],
             axis=2,
         )
@@ -55,7 +55,7 @@ def overlay_transparent(background, overlay, x, y):
 
     background[y:y+h, x:x+w] = (1.0 - mask) * background[y:y+h, x:x+w] + mask * overlay_image
 
-    return background
+    return w, background
 
 
 def get_coordinates(background, overlay):
@@ -65,11 +65,11 @@ def get_coordinates(background, overlay):
 
 def crop_image(y, x, image):
     h, w = image.shape[:2]
-    return image[y:y + h, x:x + w]
+    return image[y:y + h, x:x + w], w
 
 
-def add_text(img, trend_name):
-    today = str(datetime.datetime.today().strftime('%m-%d-%Y'))
+def add_text(img, text_coord, full_location, trend_name):
+    today = str(datetime.datetime.today().strftime('%A, %B %d, %Y %H:%M:%S'))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     pil_img = Image.fromarray(img)
@@ -77,7 +77,12 @@ def add_text(img, trend_name):
 
     font = ImageFont.truetype('{}/static/LinLibertine_aS.ttf'.format(str(SRC_DIR)), 15)
     draw.text((250, 150),
-              '{} trending on {}'.format(trend_name, today),
+              f'{trend_name}',
+              font=font,
+              fill=(153, 153, 153, 1))
+
+    draw.text((250, int(text_coord+50)),
+              f'{full_location} | {today}',
               font=font,
               fill=(153, 153, 153, 1))
 
@@ -96,10 +101,11 @@ def run(args_dict):
 
     x, y = get_coordinates(background, overlay)
 
-    img = overlay_transparent(background, overlay, x, y)
+    text_coord, img = overlay_transparent(background, overlay, x, y)
 
     trend_name = args_dict['name']
-    img = add_text(img, trend_name)
+    full_location = args_dict['location']
+    img = add_text(img, text_coord, full_location, trend_name)
 
     return img
 
@@ -114,6 +120,8 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--background', required=False,
         default='/home/git/viral_tees/static/background.jpg',
         help='Path to overlay image on t-shirt.')
+    parser.add_argument('l', '--location', required=True,
+        help='Full location string for t-short text')
     parser.add_argument('-o', '--output', required=True,
         help='Path to image output.')
 
