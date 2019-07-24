@@ -32,8 +32,8 @@ def retrieve(date):
         'images': images
     }
 
-def get_locations(trends, trimmed, images):
 
+def get_locations(trends, trimmed, images):
     trend_locs = [x['scope']['luigi_loc'] for x in trends]
     trimmed_locs = [x['scope']['luigi_loc'] for x in trimmed]
     image_locs = [x['scope']['luigi_loc'] for x in images]

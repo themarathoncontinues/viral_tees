@@ -480,9 +480,10 @@ class ImageOverlay(luigi.Task):
 
         args_dict = {
             'image': self.data['tweet']['crop_path'],
-            'name': self.data['trend'].get('name'),
+            'name': self.data['tweet'].get('trend'),
             'tweet_id': self.data['tweet']['tweet_id'],
             'luigi_at': self.data['luigi_at'],
+            'location': location_full.get(self.data['luigi_loc']),
             'luigi_loc': self.data['luigi_loc'],
             'media_url': self.data['tweet']['media_url'],
             'user': self.data['tweet']['user'],
@@ -721,6 +722,7 @@ def run(args_dict):
 
     if args_dict['soft']:
         luigi.build([SoftClean()])
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
