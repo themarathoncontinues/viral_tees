@@ -82,7 +82,7 @@ def add_text(img, text_coord, full_location, trend_name):
               fill=(153, 153, 153, 1))
 
     draw.text((250, int(text_coord+50)),
-              f'{full_location} | {today}',
+              f'{full_location.lower()} | {today.lower()}',
               font=font,
               fill=(153, 153, 153, 1))
 
