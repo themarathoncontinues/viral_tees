@@ -92,7 +92,7 @@ def decide(loc, date, data):
             key=lambda x: x['tweet_volume']
         )
 
-        if highest_vol['name'] == most_retweets['trend']:
+        if highest_vol['name'].replace('#', '').lower() == most_retweets['trend']:
             meta['luigi_loc'] = loc
             meta['luigi_at'] = date.strftime("%Y%m%d_%H%M%S")
             meta['trend'] = highest_vol
